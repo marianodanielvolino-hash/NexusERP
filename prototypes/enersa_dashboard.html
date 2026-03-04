@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ENERSA — Sistema de Control de Gestión</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --azul-enersa: #003A70;
+    --azul-medio: #005AA0;
+    --azul-claro: #0070C0;
+    --naranja: #F5A623;
+    --naranja-vivo: #FF8C00;
+    --verde: #27AE60;
+    --rojo: #E74C3C;
+    --amarillo: #F39C12;
+    --bg: #040E1C;
+    --bg2: #071425;
+    --bg3: #0A1E35;
+    --card: #0D2440;
+    --card2: #102B4E;
+    --borde: rgba(0,112,192,0.2);
+    --texto: #E8F0F8;
+    --texto2: #8BAABF;
+    --texto3: #4A6A84;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--texto);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grid de fondo */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,112,192,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,112,192,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* HEADER */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(4,14,28,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--borde);
+    padding: 0 2rem;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+  }
+
+  .logo-mark {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--azul-claro), var(--naranja));
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    color: white;
+    letter-spacing: 0.5px;
+  }
+
+  .logo-text {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    color: var(--texto);
+  }
+
+  .logo-sub {
+    font-size: 0.65rem;
+    color: var(--texto3);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-top: 1px;
+  }
+
+  .header-center {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 3px;
+    color: var(--texto3);
+    text-transform: uppercase;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .periodo-selector {
+    background: var(--card);
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+    padding: 0.35rem 0.8rem;
+    color: var(--texto);
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    cursor: pointer;
+    outline: none;
+  }
+
+  .live-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    color: var(--verde);
+    letter-spacing: 1px;
+  }
+
+  .live-dot {
+    width: 6px;
+    height: 6px;
+    background: var(--verde);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.3); }
+  }
+
+  /* MAIN LAYOUT */
+  main {
+    position: relative;
+    z-index: 1;
+    padding: 1.5rem 2rem 3rem;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  /* TÍTULO SECCIÓN */
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 1.2rem;
+    margin-top: 2rem;
+  }
+
+  .section-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--texto3);
+  }
+
+  .section-line {
+    flex: 1;
+    height: 1px;
+    background: var(--borde);
+  }
+
+  /* RESUMEN ESTADO GENERAL */
+  .estado-general {
+    background: linear-gradient(135deg, var(--card) 0%, rgba(0,112,192,0.15) 100%);
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .estado-general::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--naranja);
+    border-radius: 4px 0 0 4px;
+  }
+
+  .estado-label {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    color: var(--texto3);
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+
+  .estado-valor {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: var(--naranja);
+    line-height: 1;
+  }
+
+  .estado-desc {
+    font-size: 0.8rem;
+    color: var(--texto2);
+    margin-top: 0.3rem;
+  }
+
+  .estado-right {
+    display: flex;
+    gap: 3rem;
+  }
+
+  .estado-stat {
+    text-align: center;
+  }
+
+  .estado-stat-val {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .verde { color: var(--verde); }
+  .rojo { color: var(--rojo); }
+  .amarillo { color: var(--amarillo); }
+
+  .estado-stat-label {
+    font-size: 0.72rem;
+    color: var(--texto3);
+    margin-top: 0.3rem;
+    letter-spacing: 0.5px;
+  }
+
+  /* GRID DE ÁREAS */
+  .areas-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.8rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .area-card {
+    background: var(--card);
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    padding: 1rem 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .area-card:hover {
+    background: var(--card2);
+    border-color: rgba(0,112,192,0.4);
+    transform: translateY(-2px);
+  }
+
+  .area-card.activa {
+    border-color: var(--azul-claro);
+    background: rgba(0,112,192,0.12);
+  }
+
+  .area-semaforo {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-bottom: 0.6rem;
+  }
+
+  .area-nombre {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--texto2);
+    letter-spacing: 0.3px;
+    line-height: 1.3;
+    margin-bottom: 0.5rem;
+  }
+
+  .area-score {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .area-tendencia {
+    font-size: 0.65rem;
+    color: var(--texto3);
+    margin-top: 0.3rem;
+  }
+
+  /* INDICADORES DETALLE */
+  .indicadores-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+
+  .kpi-card {
+    background: var(--card);
+    border: 1px solid var(--borde);
+    border-radius: 10px;
+    padding: 1.2rem 1.4rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s;
+  }
+
+  .kpi-card:hover {
+    border-color: rgba(0,112,192,0.35);
+  }
+
+  .kpi-area-tag {
+    font-size: 0.62rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--texto3);
+    margin-bottom: 0.5rem;
+  }
+
+  .kpi-nombre {
+    font-size: 0.82rem;
+    color: var(--texto2);
+    margin-bottom: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .kpi-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 0.6rem;
+  }
+
+  .kpi-valor {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .kpi-unidad {
+    font-size: 0.75rem;
+    color: var(--texto3);
+    margin-left: 0.2rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .kpi-meta {
+    font-size: 0.72rem;
+    color: var(--texto3);
+  }
+
+  .kpi-meta span {
+    color: var(--texto2);
+  }
+
+  /* BARRA DE PROGRESO */
+  .progress-track {
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 0.6rem;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 1s ease;
+  }
+
+  /* MINI SPARKLINE */
+  .sparkline-area {
+    margin-top: 0.8rem;
+    height: 36px;
+    position: relative;
+  }
+
+  .sparkline-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ALERTA STRIP */
+  .alerta-strip {
+    background: rgba(231,76,60,0.08);
+    border: 1px solid rgba(231,76,60,0.25);
+    border-left: 3px solid var(--rojo);
+    border-radius: 8px;
+    padding: 0.8rem 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .alerta-icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  .alerta-texto {
+    font-size: 0.8rem;
+    color: var(--texto2);
+  }
+
+  .alerta-texto strong {
+    color: var(--rojo);
+  }
+
+  .alerta-fecha {
+    margin-left: auto;
+    font-size: 0.7rem;
+    color: var(--texto3);
+    flex-shrink: 0;
+  }
+
+  /* MINI CHART BARRAS */
+  .bar-chart-wrap {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 36px;
+    margin-top: 0.8rem;
+  }
+
+  .bar-item {
+    flex: 1;
+    border-radius: 2px 2px 0 0;
+    transition: opacity 0.2s;
+    min-width: 0;
+  }
+
+  .bar-item:hover { opacity: 0.8; }
+
+  /* DIVIDER VERTICAL */
+  .kpi-divider {
+    border: none;
+    border-top: 1px solid var(--borde);
+    margin: 0.7rem 0;
+  }
+
+  /* FOOTER */
+  .dash-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--borde);
+  }
+
+  .footer-info {
+    font-size: 0.72rem;
+    color: var(--texto3);
+  }
+
+  .footer-logo {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.75rem;
+    letter-spacing: 2px;
+    color: var(--texto3);
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 1100px) {
+    .areas-grid { grid-template-columns: repeat(4, 1fr); }
+    .indicadores-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ANIMACIONES DE ENTRADA */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: fadeIn 0.5s ease forwards;
+  }
+
+  @keyframes fadeIn {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-in:nth-child(1) { animation-delay: 0.05s; }
+  .fade-in:nth-child(2) { animation-delay: 0.1s; }
+  .fade-in:nth-child(3) { animation-delay: 0.15s; }
+  .fade-in:nth-child(4) { animation-delay: 0.2s; }
+  .fade-in:nth-child(5) { animation-delay: 0.25s; }
+  .fade-in:nth-child(6) { animation-delay: 0.3s; }
+  .fade-in:nth-child(7) { animation-delay: 0.35s; }
+
+  .nav-tabs {
+    display: flex;
+    gap: 0.3rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid var(--borde);
+    padding-bottom: 0;
+  }
+
+  .nav-tab {
+    padding: 0.5rem 1rem;
+    font-size: 0.78rem;
+    color: var(--texto3);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.2s;
+    letter-spacing: 0.5px;
+  }
+
+  .nav-tab:hover { color: var(--texto2); }
+
+  .nav-tab.activa {
+    color: var(--naranja);
+    border-bottom-color: var(--naranja);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <div class="logo-mark">EN</div>
+    <div>
+      <div class="logo-text">ENERSA</div>
+      <div class="logo-sub">Energía de Entre Ríos S.A.</div>
+    </div>
+  </div>
+  <div class="header-center">Sistema de Control de Gestión</div>
+  <div class="header-right">
+    <select class="periodo-selector" onchange="cambiarPeriodo(this.value)">
+      <option value="feb25">Febrero 2025</option>
+      <option value="ene25">Enero 2025</option>
+      <option value="dic24">Diciembre 2024</option>
+    </select>
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      ACTUALIZADO
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- NAV TABS -->
+  <div class="nav-tabs">
+    <div class="nav-tab activa" onclick="setTab(this,'ejecutivo')">Vista Ejecutiva</div>
+    <div class="nav-tab" onclick="setTab(this,'comercial')">Comercial</div>
+    <div class="nav-tab" onclick="setTab(this,'calidad')">Calidad de Servicio</div>
+    <div class="nav-tab" onclick="setTab(this,'operaciones')">Operaciones</div>
+    <div class="nav-tab" onclick="setTab(this,'obras')">Obras</div>
+    <div class="nav-tab" onclick="setTab(this,'admin')">Admin & Finanzas</div>
+  </div>
+
+  <!-- VISTA EJECUTIVA -->
+  <div id="tab-ejecutivo">
+
+    <!-- ESTADO GENERAL -->
+    <div class="section-header">
+      <span class="section-title">Estado General</span>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="estado-general">
+      <div>
+        <div class="estado-label">Índice de Gestión Global</div>
+        <div class="estado-valor">82<span style="font-size:1.4rem;color:var(--texto3)">%</span></div>
+        <div class="estado-desc">Promedio ponderado de todas las áreas · Feb 2025</div>
+      </div>
+      <div class="estado-right">
+        <div class="estado-stat">
+          <div class="estado-stat-val verde">4</div>
+          <div class="estado-stat-label">Áreas en Meta</div>
+        </div>
+        <div class="estado-stat">
+          <div class="estado-stat-val amarillo">2</div>
+          <div class="estado-stat-label">Áreas en Alerta</div>
+        </div>
+        <div class="estado-stat">
+          <div class="estado-stat-val rojo">1</div>
+          <div class="estado-stat-label">Área Crítica</div>
+        </div>
+        <div class="estado-stat">
+          <div class="estado-stat-val" style="color:var(--azul-claro)">15</div>
+          <div class="estado-stat-label">Indicadores Activos</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERTAS -->
+    <div class="section-header" style="margin-top:1.5rem">
+      <span class="section-title">Alertas del Período</span>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="alerta-strip">
+      <div class="alerta-icon">⚠</div>
+      <div class="alerta-texto"><strong>Calidad de Servicio — SAIDI</strong>: Duración promedio de interrupciones alcanzó 12.4 hs/usuario, superando la meta regulatoria de 10 hs. Tercer mes consecutivo fuera de meta.</div>
+      <div class="alerta-fecha">Feb 2025</div>
+    </div>
+
+    <div class="alerta-strip" style="border-left-color:var(--amarillo);background:rgba(243,156,18,0.06);border-color:rgba(243,156,18,0.2)">
+      <div class="alerta-icon">◆</div>
+      <div class="alerta-texto"><strong>Comercial — Morosidad</strong>: Cartera morosa en 18%, por encima del umbral de 15%. Tendencia creciente desde noviembre 2024.</div>
+      <div class="alerta-fecha">Feb 2025</div>
+    </div>
+
+    <div class="alerta-strip" style="border-left-color:var(--amarillo);background:rgba(243,156,18,0.06);border-color:rgba(243,156,18,0.2)">
+      <div class="alerta-icon">◆</div>
+      <div class="alerta-texto"><strong>Obras — CAPEX</strong>: Ejecución acumulada al 68% del plan anual. Riesgo de subejecución si no se acelera adjudicación de licitaciones pendientes.</div>
+      <div class="alerta-fecha">Feb 2025</div>
+    </div>
+
+    <!-- ÁREAS -->
+    <div class="section-header" style="margin-top:1.5rem">
+      <span class="section-title">Estado por Área</span>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="areas-grid">
+      <div class="area-card fade-in activa" onclick="setTab(document.querySelector('.nav-tab:nth-child(2)'),'comercial')">
+        <div class="area-semaforo" style="background:var(--amarillo)"></div>
+        <div class="area-nombre">Comercial</div>
+        <div class="area-score amarillo">84<span style="font-size:0.9rem">%</span></div>
+        <div class="area-tendencia">▼ -2pp vs ene</div>
+      </div>
+      <div class="area-card fade-in" onclick="setTab(document.querySelector('.nav-tab:nth-child(3)'),'calidad')">
+        <div class="area-semaforo" style="background:var(--rojo)"></div>
+        <div class="area-nombre">Calidad Servicio</div>
+        <div class="area-score rojo">71<span style="font-size:0.9rem">%</span></div>
+        <div class="area-tendencia">▼ -4pp vs ene</div>
+      </div>
+      <div class="area-card fade-in" onclick="setTab(document.querySelector('.nav-tab:nth-child(4)'),'operaciones')">
+        <div class="area-semaforo" style="background:var(--verde)"></div>
+        <div class="area-nombre">Operaciones</div>
+        <div class="area-score verde">91<span style="font-size:0.9rem">%</span></div>
+        <div class="area-tendencia">▲ +1pp vs ene</div>
+      </div>
+      <div class="area-card fade-in" onclick="setTab(document.querySelector('.nav-tab:nth-child(5)'),'obras')">
+        <div class="area-semaforo" style="background:var(--amarillo)"></div>
+        <div class="area-nombre">Obras</div>
+        <div class="area-score amarillo">78<span style="font-size:0.9rem">%</span></div>
+        <div class="area-tendencia">— igual vs ene</div>
+      </div>
+      <div class="area-card fade-in" onclick="setTab(document.querySelector('.nav-tab:nth-child(6)'),'admin')">
+        <div class="area-semaforo" style="background:var(--verde)"></div>
+        <div class="area-nombre">Admin & Finanzas</div>
+        <div class="area-score verde">88<span style="font-size:0.9rem">%</span></div>
+        <div class="area-tendencia">▲ +3pp vs ene</div>
+      </div>
+      <div class="area-card fade-in">
+        <div class="area-semaforo" style="background:var(--verde)"></div>
+        <div class="area-nombre">Compras</div>
+        <div class="area-score verde">86<span style="font-size:0.9rem">%</span></div>
+        <div class="area-tendencia">▲ +1pp vs ene</div>
+      </div>
+      <div class="area-card fade-in">
+        <div class="area-semaforo" style="background:var(--verde)"></div>
+        <div class="area-nombre">Legales</div>
+        <div class="area-score verde">90<span style="font-size:0.9rem">%</span></div>
+        <div class="area-tendencia">— igual vs ene</div>
+      </div>
+    </div>
+
+    <!-- KPIs CLAVE -->
+    <div class="section-header" style="margin-top:1.5rem">
+      <span class="section-title">Indicadores Clave</span>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="indicadores-grid">
+
+      <!-- KPI 1 -->
+      <div class="kpi-card fade-in">
+        <div class="kpi-area-tag">Comercial</div>
+        <div class="kpi-nombre">Índice de Cobrabilidad</div>
+        <div class="kpi-row">
+          <div>
+            <span class="kpi-valor amarillo">84</span>
+            <span class="kpi-unidad">%</span>
+          </div>
+          <div style="text-align:right">
+            <div class="kpi-meta">Meta: <span>92%</span></div>
+            <div class="kpi-meta">Prev: <span>86%</span></div>
+          </div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:84%;background:var(--amarillo)"></div>
+        </div>
+        <div class="bar-chart-wrap">
+          <div class="bar-item" style="height:60%;background:rgba(243,156,18,0.35)"></div>
+          <div class="bar-item" style="height:75%;background:rgba(243,156,18,0.4)"></div>
+          <div class="bar-item" style="height:82%;background:rgba(243,156,18,0.45)"></div>
+          <div class="bar-item" style="height:88%;background:rgba(243,156,18,0.5)"></div>
+          <div class="bar-item" style="height:91%;background:rgba(243,156,18,0.55)"></div>
+          <div class="bar-item" style="height:86%;background:rgba(243,156,18,0.6)"></div>
+          <div class="bar-item" style="height:84%;background:var(--amarillo)"></div>
+        </div>
+      </div>
+
+      <!-- KPI 2 -->
+      <div class="kpi-card fade-in">
+        <div class="kpi-area-tag">Comercial</div>
+        <div class="kpi-nombre">Morosidad de Cartera</div>
+        <div class="kpi-row">
+          <div>
+            <span class="kpi-valor rojo">18</span>
+            <span class="kpi-unidad">%</span>
+          </div>
+          <div style="text-align:right">
+            <div class="kpi-meta">Meta: <span>&lt;15%</span></div>
+            <div class="kpi-meta">Prev: <span>16%</span></div>
+          </div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:18%;background:var(--rojo)"></div>
+        </div>
+        <div class="bar-chart-wrap">
+          <div class="bar-item" style="height:40%;background:rgba(231,76,60,0.3)"></div>
+          <div class="bar-item" style="height:45%;background:rgba(231,76,60,0.35)"></div>
+          <div class="bar-item" style="height:50%;background:rgba(231,76,60,0.4)"></div>
+          <div class="bar-item" style="height:55%;background:rgba(231,76,60,0.5)"></div>
+          <div class="bar-item" style="height:60%;background:rgba(231,76,60,0.6)"></div>
+          <div class="bar-item" style="height:65%;background:rgba(231,76,60,0.7)"></div>
+          <div class="bar-item" style="height:72%;background:var(--rojo)"></div>
+        </div>
+      </div>
+
+      <!-- KPI 3 -->
+      <div class="kpi-card fade-in">
+        <div class="kpi-area-tag">Calidad de Servicio</div>
+        <div class="kpi-nombre">SAIDI — Duración Promedio de Interrupciones</div>
+        <div class="kpi-row">
+          <div>
+            <span class="kpi-valor rojo">12.4</span>
+            <span class="kpi-unidad">hs/usu.</span>
+          </div>
+          <div style="text-align:right">
+            <div class="kpi-meta">Meta: <span>&lt;10 hs</span></div>
+            <div class="kpi-meta">Prev: <span>11.8 hs</span></div>
+          </div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:75%;background:var(--rojo)"></div>
+        </div>
+        <div class="bar-chart-wrap">
+          <div class="bar-item" style="height:55%;background:rgba(231,76,60,0.35)"></div>
+          <div class="bar-item" style="height:50%;background:rgba(231,76,60,0.4)"></div>
+          <div class="bar-item" style="height:65%;background:rgba(231,76,60,0.45)"></div>
+          <div class="bar-item" style="height:70%;background:rgba(231,76,60,0.5)"></div>
+          <div class="bar-item" style="height:75%;background:rgba(231,76,60,0.6)"></div>
+          <div class="bar-item" style="height:80%;background:rgba(231,76,60,0.7)"></div>
+          <div class="bar-item" style="height:87%;background:var(--rojo)"></div>
+        </div>
+      </div>
+
+      <!-- KPI 4 -->
+      <div class="kpi-card fade-in">
+        <div class="kpi-area-tag">Calidad de Servicio</div>
+        <div class="kpi-nombre">SAIFI — Frecuencia de Interrupciones</div>
+        <div class="kpi-row">
+          <div>
+            <span class="kpi-valor amarillo">8.2</span>
+            <span class="kpi-unidad">int/usu.</span>
+          </div>
+          <div style="text-align:right">
+            <div class="kpi-meta">Meta: <span>&lt;8</span></div>
+            <div class="kpi-meta">Prev: <span>7.9</span></div>
+          </div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:68%;background:var(--amarillo)"></div>
+        </div>
+        <div class="bar-chart-wrap">
+          <div class="bar-item" style="height:70%;background:rgba(243,156,18,0.3)"></div>
+          <div class="bar-item" style="height:65%;background:rgba(243,156,18,0.35)"></div>
+          <div class="bar-item" style="height:72%;background:rgba(243,156,18,0.4)"></div>
+          <div class="bar-item" style="height:68%;background:rgba(243,156,18,0.5)"></div>
+          <div class="bar-item" style="height:70%;background:rgba(243,156,18,0.55)"></div>
+          <div class="bar-item" style="height:66%;background:rgba(243,156,18,0.6)"></div>
+          <div class="bar-item" style="height:72%;background:var(--amarillo)"></div>
+        </div>
+      </div>
+
+      <!-- KPI 5 -->
+      <div class="kpi-card fade-in">
+        <div class="kpi-area-tag">Obras</div>
+        <div class="kpi-nombre">Ejecución CAPEX Acumulada</div>
+        <div class="kpi-row">
+          <div>
+            <span class="kpi-valor amarillo">68</span>
+            <span class="kpi-unidad">%</span>
+          </div>
+          <div style="text-align:right">
+            <div class="kpi-meta">Meta: <span>80%</span></div>
+            <div class="kpi-meta">Prev: <span>62%</span></div>
+          </div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:68%;background:var(--amarillo)"></div>
+        </div>
+        <div class="bar-chart-wrap">
+          <div class="bar-item" style="height:25%;background:rgba(243,156,18,0.3)"></div>
+          <div class="bar-item" style="height:35%;background:rgba(243,156,18,0.35)"></div>
+          <div class="bar-item" style="height:42%;background:rgba(243,156,18,0.4)"></div>
+          <div class="bar-item" style="height:50%;background:rgba(243,156,18,0.5)"></div>
+          <div class="bar-item" style="height:55%;background:rgba(243,156,18,0.55)"></div>
+          <div class="bar-item" style="height:62%;background:rgba(243,156,18,0.6)"></div>
+          <div class="bar-item" style="height:68%;background:var(--amarillo)"></div>
+        </div>
+      </div>
+
+      <!-- KPI 6 -->
+      <div class="kpi-card fade-in">
+        <div class="kpi-area-tag">Admin & Finanzas</div>
+        <div class="kpi-nombre">Ejecución Presupuestaria</div>
+        <div class="kpi-row">
+          <div>
+            <span class="kpi-valor verde">93</span>
+            <span class="kpi-unidad">%</span>
+          </div>
+          <div style="text-align:right">
+            <div class="kpi-meta">Meta: <span>90–100%</span></div>
+            <div class="kpi-meta">Prev: <span>91%</span></div>
+          </div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:93%;background:var(--verde)"></div>
+        </div>
+        <div class="bar-chart-wrap">
+          <div class="bar-item" style="height:80%;background:rgba(39,174,96,0.3)"></div>
+          <div class="bar-item" style="height:85%;background:rgba(39,174,96,0.4)"></div>
+          <div class="bar-item" style="height:88%;background:rgba(39,174,96,0.45)"></div>
+          <div class="bar-item" style="height:86%;background:rgba(39,174,96,0.5)"></div>
+          <div class="bar-item" style="height:90%;background:rgba(39,174,96,0.6)"></div>
+          <div class="bar-item" style="height:91%;background:rgba(39,174,96,0.7)"></div>
+          <div class="bar-item" style="height:93%;background:var(--verde)"></div>
+        </div>
+      </div>
+
+    </div>
+
+  </div><!-- /tab-ejecutivo -->
+
+  <!-- VISTA COMERCIAL (ejemplo de tablero operativo) -->
+  <div id="tab-comercial" style="display:none">
+    <div class="section-header">
+      <span class="section-title">Área Comercial — Detalle Operativo · Feb 2025</span>
+      <div class="section-line"></div>
+    </div>
+
+    <div class="estado-general" style="margin-bottom:1.5rem">
+      <div>
+        <div class="estado-label">Estado del Área</div>
+        <div class="estado-valor amarillo">84<span style="font-size:1.4rem;color:var(--texto3)">%</span></div>
+        <div class="estado-desc">2 de 4 indicadores en meta · Tendencia negativa</div>
+      </div>
+      <div class="estado-right">
+        <div class="estado-stat">
+          <div class="estado-stat-val" style="color:var(--azul-claro)">390K</div>
+          <div class="estado-stat-label">Usuarios Activos</div>
+        </div>
+        <div class="estado-stat">
+          <div class="estado-stat-val verde">84%</div>
+          <div class="estado-stat-label">Cobrabilidad</div>
+        </div>
+        <div class="estado-stat">
+          <div class="estado-stat-val rojo">18%</div>
+          <div class="estado-stat-label">Morosidad</div>
+        </div>
+        <div class="estado-stat">
+          <div class="estado-stat-val amarillo">4.2d</div>
+          <div class="estado-stat-label">Resolución Reclamos</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="indicadores-grid">
+      <div class="kpi-card fade-in">
+        <div class="kpi-area-tag">Comercial · Facturación</div>
+        <div class="kpi-nombre">Cobrabilidad mensual</div>
+        <div class="kpi-row">
+          <div><span class="kpi-valor amarillo">84</span><span class="kpi-unidad">%</span></div>
+          <div style="text-align:right">
+            <div class="kpi-meta">Meta: <span>92%</span></div>
+            <div class="kpi-meta">Fuente: <span>Sistema facturación</span></div>
+          </div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:84%;background:var(--amarillo)"></div>
+        </div>
+        <hr class="kpi-divider">
+        <div style="font-size:0.72rem;color:var(--texto3)">Responsable: Jefatura de Cobranzas · Actualización: Mensual</div>
+      </div>
+
+      <div class="kpi-card fade-in">
+        <div class="kpi-area-tag">Comercial · Cartera</div>
+        <div class="kpi-nombre">Nivel de morosidad acumulada</div>
+        <div class="kpi-row">
+          <div><span class="kpi-valor rojo">18</span><span class="kpi-unidad">%</span></div>
+          <div style="text-align:right">
+            <div class="kpi-meta">Meta: <span>&lt;15%</span></div>
+            <div class="kpi-meta">Fuente: <span>Sistema CRM</span></div>
+          </div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:18%;background:var(--rojo)"></div>
+        </div>
+        <hr class="kpi-divider">
+        <div style="font-size:0.72rem;color:var(--texto3)">Responsable: Gerencia Comercial · Actualización: Mensual</div>
+      </div>
+
+      <div class="kpi-card fade-in">
+        <div class="kpi-area-tag">Comercial · Atención</div>
+        <div class="kpi-nombre">Tiempo promedio resolución de reclamos</div>
+        <div class="kpi-row">
+          <div><span class="kpi-valor amarillo">4.2</span><span class="kpi-unidad">días</span></div>
+          <div style="text-align:right">
+            <div class="kpi-meta">Meta: <span>&lt;3 días</span></div>
+            <div class="kpi-meta">Fuente: <span>Mesa de reclamos</span></div>
+          </div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:65%;background:var(--amarillo)"></div>
+        </div>
+        <hr class="kpi-divider">
+        <div style="font-size:0.72rem;color:var(--texto3)">Responsable: Atención al Usuario · Actualización: Mensual</div>
+      </div>
+
+      <div class="kpi-card fade-in">
+        <div class="kpi-area-tag">Comercial · Usuarios</div>
+        <div class="kpi-nombre">Evolución base de usuarios activos</div>
+        <div class="kpi-row">
+          <div><span class="kpi-valor verde">390</span><span class="kpi-unidad">K</span></div>
+          <div style="text-align:right">
+            <div class="kpi-meta">Meta: <span>Crecimiento sostenido</span></div>
+            <div class="kpi-meta">Fuente: <span>Padrón usuarios</span></div>
+          </div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width:95%;background:var(--verde)"></div>
+        </div>
+        <hr class="kpi-divider">
+        <div style="font-size:0.72rem;color:var(--texto3)">Responsable: Gerencia Comercial · Actualización: Mensual</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABS VACÍOS PLACEHOLDER -->
+  <div id="tab-calidad" style="display:none">
+    <div class="section-header"><span class="section-title">Calidad de Servicio — En construcción</span><div class="section-line"></div></div>
+    <div style="color:var(--texto3);font-size:0.85rem;padding:2rem;text-align:center;border:1px dashed var(--borde);border-radius:10px">Tablero operativo de Calidad de Servicio · Se completa con datos relevados en Etapa 3</div>
+  </div>
+  <div id="tab-operaciones" style="display:none">
+    <div class="section-header"><span class="section-title">Operaciones — En construcción</span><div class="section-line"></div></div>
+    <div style="color:var(--texto3);font-size:0.85rem;padding:2rem;text-align:center;border:1px dashed var(--borde);border-radius:10px">Tablero operativo de Operaciones y Distribución · Se completa con datos relevados en Etapa 3</div>
+  </div>
+  <div id="tab-obras" style="display:none">
+    <div class="section-header"><span class="section-title">Obras — En construcción</span><div class="section-line"></div></div>
+    <div style="color:var(--texto3);font-size:0.85rem;padding:2rem;text-align:center;border:1px dashed var(--borde);border-radius:10px">Tablero operativo de Obras · Se completa con datos relevados en Etapa 3</div>
+  </div>
+  <div id="tab-admin" style="display:none">
+    <div class="section-header"><span class="section-title">Admin & Finanzas — En construcción</span><div class="section-line"></div></div>
+    <div style="color:var(--texto3);font-size:0.85rem;padding:2rem;text-align:center;border:1px dashed var(--borde);border-radius:10px">Tablero operativo de Admin & Finanzas · Se completa con datos relevados en Etapa 3</div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="dash-footer">
+    <div class="footer-info">Datos correspondientes a Febrero 2025 · Próxima actualización: 05/03/2025 · Sistema de Control de Gestión v1.0</div>
+    <div class="footer-logo">ENERSA · CONTROL DE GESTIÓN</div>
+  </div>
+
+</main>
+
+<script>
+  function setTab(el, tabId) {
+    // Ocultar todos
+    document.querySelectorAll('[id^="tab-"]').forEach(t => t.style.display = 'none');
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('activa'));
+    // Mostrar activo
+    document.getElementById('tab-' + tabId).style.display = 'block';
+    if (el && el.classList) el.classList.add('activa');
+  }
+
+  function cambiarPeriodo(val) {
+    // Placeholder: en versión real actualiza los datos desde la fuente
+    const labels = { feb25: 'Febrero 2025', ene25: 'Enero 2025', dic24: 'Diciembre 2024' };
+    console.log('Período seleccionado:', labels[val]);
+  }
+</script>
+
+</body>
+</html>
