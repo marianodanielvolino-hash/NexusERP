@@ -7,7 +7,7 @@ export default function AyudaPage() {
         <div className="fade-in" style={{ padding: "1.5rem 0", maxWidth: "800px", margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: "3rem" }}>
                 <h2 style={{ fontSize: "2rem", fontWeight: 700, color: "var(--texto)", margin: "0 0 1rem 0" }}>Centro de Ayuda</h2>
-                <p style={{ color: "var(--texto2)", fontSize: "1.1rem" }}>Encuentra respuestas rápidas y guías operativas de NexusERP.</p>
+                <p style={{ color: "var(--texto2)", fontSize: "1.1rem" }}>Encuentra respuestas rápidas y guías operativas de NEXUS SCG.</p>
                 <div style={{ marginTop: "2rem" }}>
                     <input type="text" placeholder="Buscar manuales, FAQs..." style={{
                         width: "100%", maxWidth: "500px", padding: "1rem", borderRadius: "12px",

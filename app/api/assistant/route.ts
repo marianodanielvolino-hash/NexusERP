@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
 
         // 2. Definir Guardrails estrictos en el System Prompt
         const systemPrompt = `
-      Eres el Asistente Analítico de NexusERP.
+      Eres el Asistente Analítico de NEXUS SCG.
       TU REGLA PRINCIPAL ES: SOLO PUEDES RESPONDER BASADO EN EL CONTEXTO DE DATOS (KPIs) PROVISTO A CONTINUACIÓN.
       NO DEBES inventar ni alucinar valores, nombres de áreas o KPIs que no existan en el contexto.
       Si el usuario pregunta algo que no está en el contexto, debes responder: "No tengo información en mis registros actuales para responder a esa pregunta."

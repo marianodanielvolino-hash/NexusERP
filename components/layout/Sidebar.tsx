@@ -62,9 +62,9 @@ export function Sidebar() {
       <div className="sb-logo">
         <div className="sb-logo-row">
           <div className="sb-mark">NX</div>
-          <div className="sb-name">NexusERP</div>
+          <div className="sb-name">NEXUS SCG</div>
         </div>
-        <span className="sb-tag">Marca Blanca SCG</span>
+        <span className="sb-tag">Sistema de Control y Gestión Version 1.0</span>
       </div>
 
       <div className="sb-admin-badge">
