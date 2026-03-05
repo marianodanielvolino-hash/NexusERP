@@ -1,73 +1,64 @@
-// app/api/assistant/route.ts
-import { NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
-import { createClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
+import Anthropic from '@anthropic-ai/sdk'
 
 const anthropic = new Anthropic({
-    apiKey: process.env.ANTHROPIC_API_KEY || 'dummy_key', // This expects ANTHROPIC_API_KEY in .env.local
-});
+    apiKey: process.env.ANTHROPIC_API_KEY || '',
+})
 
-export async function POST(req: Request) {
+/**
+ * Iron Rule #8: IA solo sobre datos existentes. RAG Restringido.
+ */
+export async function POST(req: NextRequest) {
     try {
-        const supabase = await createClient();
+        const supabase = await createClient()
+        const { data: { user }, error: authError } = await supabase.auth.getUser()
 
-        // Auth Check: Validar sesión JWT
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-        // Comentar validación estricta para el entorno de maquetación/Demo
-        /*
         if (authError || !user) {
-          return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+            return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
         }
-        // Extraer tenant_id del JWT o metadata
-        const tenantId = user.app_metadata?.tenant_id;
-        */
 
-        const body = await req.json();
-        const { prompt, dashboardData } = body;
+        const { query, periodId } = await req.json()
 
-        // En un entorno de Producción REAL, aquí haríamos fetch a la BD SQL para asegurar  
-        // que dashboardData provenga directamente del Backend usando el tenant_id autenticado.
-        // Ej: const { data: kpis } = await supabase.from('kpi_data').select('*').eq('tenant_id', tenantId);
+        if (!query || !periodId) {
+            return NextResponse.json({ error: 'Faltan parámetros: query y periodId' }, { status: 400 })
+        }
 
-        // Prompt Base (Configuración Sistema RAG para Nexus SCG)
+        // 1. Ejecutar Retrieval (RAG): Buscar los KPIs limitados por el RLS del usuario
+        const { data: contextKpis, error: dbError } = await supabase
+            .from('kpi_data')
+            .select('valor, observacion, estado_flujo, kpi_definitions(nombre, meta)')
+            .eq('period_id', periodId)
+
+        if (dbError) throw new Error('Error recuperando contexto de la BD')
+
+        const contextDataStr = JSON.stringify(contextKpis)
+
+        // 2. Definir Guardrails estrictos en el System Prompt
         const systemPrompt = `
-      Eres el Asistente de Inteligencia Artificial para el "Sistema de Control de Gestión" (Nexus SCG).
-      Tu rol es procesar los datos estructurados del tablero y responder consultas del usuario en lenguaje natural.
+      Eres el Asistente Analítico de NexusERP.
+      TU REGLA PRINCIPAL ES: SOLO PUEDES RESPONDER BASADO EN EL CONTEXTO DE DATOS (KPIs) PROVISTO A CONTINUACIÓN.
+      NO DEBES inventar ni alucinar valores, nombres de áreas o KPIs que no existan en el contexto.
+      Si el usuario pregunta algo que no está en el contexto, debes responder: "No tengo información en mis registros actuales para responder a esa pregunta."
       
-      Reglas Estrictas:
-      1. Solo tienes acceso y debes evaluar los datos provistos en el contexto de "dashboardData". No expongas under-the-hood SQL, IDs o datos de otros tenants.
-      2. Brinda una síntesis ejecutiva. Ve directo al punto.
-      3. Destaca tendencias: KPIs con semáforos 'critico' o 'alerta'.
-      4. Si el usuario te pide un resumen para presentarlo al directorio, estructúralo adecuadamente (Puntos clave, Áreas críticas y Recomendación táctica).
+      CONTEXTO DE DATOS RECUPERADO (RAG):
+      ${contextDataStr}
+    `
 
-      Contexto Actual del Tablero (Datos Reales):
-      ${JSON.stringify(dashboardData, null, 2)}
-    `;
-
-        // Consulta a Claude 3.5 Sonnet
-        const response = await anthropic.messages.create({
-            model: 'claude-3-5-sonnet-20241022',
+        // 3. Consultar la API de LLM (Claude)
+        const completion = await anthropic.messages.create({
+            model: 'claude-3-haiku-20240307',
             max_tokens: 1000,
-            temperature: 0.2,
+            temperature: 0.1, // Baja temperatura para minimizar alucinaciones
             system: systemPrompt,
             messages: [
-                { role: 'user', content: prompt }
+                { role: 'user', content: query }
             ]
-        });
+        })
 
-        const botResponse = response.content[0].type === 'text' ? response.content[0].text : "No response generated";
+        return NextResponse.json({ response: completion.content[0].text }, { status: 200 })
 
-        return NextResponse.json({
-            success: true,
-            answer: botResponse
-        });
-
-    } catch (error: any) {
-        console.error('AI Error:', error);
-        return NextResponse.json(
-            { success: false, error: error.message || 'Internal AI Motor Error' },
-            { status: 500 }
-        );
+    } catch (err: any) {
+        return NextResponse.json({ error: err.message }, { status: 500 })
     }
 }
