@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// Para integración Backend-to-Backend usamos Service Role.
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const supabase = createClient(supabaseUrl, supabaseServiceKey)
-
 /**
  * IRON RULE #6: Idempotencia en API Push
  * Un Job / ID de transacción único (transaction_id) evitará que mutemos dos veces.
  */
 export async function POST(req: NextRequest) {
+    // Para integración Backend-to-Backend usamos Service Role.
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'http://localhost:54321'
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'fake-key'
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
     try {
         const json = await req.json()
         const { tenant_id, transaction_id, data } = json
