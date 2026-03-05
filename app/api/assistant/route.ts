@@ -56,7 +56,9 @@ export async function POST(req: NextRequest) {
             ]
         })
 
-        return NextResponse.json({ response: completion.content[0].text }, { status: 200 })
+        const responseText = completion.content[0].type === 'text' ? completion.content[0].text : '';
+
+        return NextResponse.json({ response: responseText }, { status: 200 })
 
     } catch (err: any) {
         return NextResponse.json({ error: err.message }, { status: 500 })
