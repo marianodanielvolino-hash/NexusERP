@@ -8,11 +8,13 @@ import { KpiDetailDrawer } from "@/components/ui/KpiDetailDrawer";
 import { BulkUploadModal } from "@/components/ui/BulkUploadModal";
 import { KpiData, Status } from "@/lib/types";
 
-// Mock Data
+// Mock Data - Simulacion Operadores CIS
 const MOCK_ROWS = [
-    { kpiId: "kpi-1", name: "Índice de Cobrabilidad", target: "≥ 92%", value: "88%", status: "alert" as Status, state: "draft", lastUpdatedAt: "hace 2h" },
-    { kpiId: "kpi-2", name: "Nivel de Morosidad", target: "< 15%", value: "", status: "ok" as Status, state: "pending_manager", lastUpdatedAt: "-" },
-    { kpiId: "kpi-3", name: "Tiempo de Resolución", target: "≤ 48 hs", value: "75 hs", status: "critical" as Status, state: "rejected", lastUpdatedAt: "Ayer" },
+    { kpiId: "BURNOUT_IDX", name: "Índice de desgaste del staff", target: "< 58", value: "62", status: "alert" as Status, state: "draft", lastUpdatedAt: "hace 2h" },
+    { kpiId: "ABSENT_RATE", name: "Tasa de ausentismo", target: "< 10%", value: "", status: "ok" as Status, state: "pending_manager", lastUpdatedAt: "-" },
+    { kpiId: "INCIDENTS_CNT", name: "Incidentes y conflictos", target: "< 14", value: "22", status: "critical" as Status, state: "rejected", lastUpdatedAt: "Ayer" },
+    { kpiId: "SAFETY_CLIMATE", name: "Clima de convivencia", target: "> 75", value: "82", status: "ok" as Status, state: "draft", lastUpdatedAt: "hace 5m" },
+    { kpiId: "PARTICIP_RATE", name: "Participación en espacios", target: "> 65%", value: "60%", status: "alert" as Status, state: "draft", lastUpdatedAt: "hoy" },
 ];
 
 export default function CargaChecklistPage() {

@@ -6,15 +6,17 @@ import { KpiDetailDrawer } from "@/components/ui/KpiDetailDrawer";
 import { Status } from "@/lib/types";
 import { FilterBar } from "@/components/ui/FilterBar";
 
-// Fake mock data to populate charts and cards
-const GLOBAL_STATS = { ok: 24, alert: 5, critical: 2 };
+// Realistic Demo Data (CIS Network)
+const GLOBAL_STATS = { ok: 142, alert: 28, critical: 10 };
 const TOP_CRITICALS = [
-    { kpiId: "kpi-8", name: "Días sin Apto Técnico", areaName: "Técnica", value: 14, target: "< 10", status: "critical" as Status, delta: -4, trend: { points: [10, 11, 10, 12, 14], periodLabels: [] } },
-    { kpiId: "kpi-9", name: "Fuga de Clientes", areaName: "Comercial", value: "4.2%", target: "< 3%", status: "critical" as Status, delta: -1.2, trend: { points: [2.5, 3.1, 3.8, 3.9, 4.2], periodLabels: [] } },
+    { kpiId: "BURNOUT_IDX", name: "Índice de desgaste del staff", areaName: "Gestión Innovación", value: 68, target: "< 58", status: "critical" as Status, delta: -10, trend: { points: [55, 59, 62, 65, 68], periodLabels: [] } },
+    { kpiId: "ABSENT_RATE", name: "Tasa de ausentismo", areaName: "Gestión Innovación", value: "15%", target: "< 10%", status: "critical" as Status, delta: -5, trend: { points: [8, 9, 11, 13, 15], periodLabels: [] } },
 ];
 const AREA_STATS = [
-    { id: "a1", name: "Comercial", ok: 10, alert: 3, critical: 1, score: 84 },
-    { id: "a2", name: "Técnica", ok: 14, alert: 2, critical: 1, score: 91 },
+    { id: "1", name: "Inclusión Social", ok: 45, alert: 5, critical: 2, score: 92 },
+    { id: "2", name: "Desarrollo Humano", ok: 38, alert: 8, critical: 4, score: 85 },
+    { id: "5", name: "Gestión Innovación", ok: 22, alert: 10, critical: 3, score: 78 },
+    { id: "3", name: "Salud", ok: 37, alert: 5, critical: 1, score: 95 },
 ];
 
 export default function TablerosPage() {
@@ -65,7 +67,15 @@ export default function TablerosPage() {
 
             {activeTab === "area" && (
                 <FilterBar
-                    filters={[{ key: "areaId", label: "Filtrar Área", options: [{ label: "Comercial", value: "a1" }, { label: "Técnica", value: "a2" }] }]}
+                    filters={[{
+                        key: "areaId", label: "Filtrar Área", options: [
+                            { label: "Inclusión Social", value: "1" },
+                            { label: "Desarrollo Humano", value: "2" },
+                            { label: "Salud", value: "3" },
+                            { label: "Educación Formación", value: "4" },
+                            { label: "Gestión Innovación", value: "5" }
+                        ]
+                    }]}
                     values={{ areaId: selectedArea }}
                     onChange={(v) => setSelectedArea(v.areaId)}
                 />
@@ -142,9 +152,21 @@ export default function TablerosPage() {
                             {/* This space would iterate over all KPIs of the area in KpiCards */}
                             <div style={{ display: "flex", flexWrap: "wrap", gap: "1.5rem", marginTop: "1.5rem" }}>
                                 <KpiCard
-                                    kpi={{ id: "kpi-x", name: "Tiempo de Respuesta" }}
-                                    target="< 2h" value="1.5h" delta={+0.5} status="ok"
-                                    onOpen={() => openDrawer("kpi-x")}
+                                    kpi={{ id: "INCIDENTS_CNT", name: "Incidentes y conflictos registrados" }}
+                                    target="< 14" value="22" delta={-8} status="critical"
+                                    onOpen={() => openDrawer("INCIDENTS_CNT")}
+                                    width={280}
+                                />
+                                <KpiCard
+                                    kpi={{ id: "SAFETY_CLIMATE", name: "Clima de convivencia y seguridad" }}
+                                    target="> 75" value="82" delta={+7} status="ok"
+                                    onOpen={() => openDrawer("SAFETY_CLIMATE")}
+                                    width={280}
+                                />
+                                <KpiCard
+                                    kpi={{ id: "PARTICIP_RATE", name: "Participación en espacios" }}
+                                    target="> 65%" value="60%" delta={-5} status="alert"
+                                    onOpen={() => openDrawer("PARTICIP_RATE")}
                                     width={280}
                                 />
                             </div>

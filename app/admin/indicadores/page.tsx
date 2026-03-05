@@ -4,11 +4,11 @@ import { useState } from "react";
 
 export default function IndicadoresABM() {
     const [indicadores, setIndicadores] = useState([
-        { id: 1, nombre: 'Índice de Cobrabilidad', area: 'Comercial', tipo: 'Mayor es mejor', meta: '≥ 92%', unidad: '%', frecuencia: 'Mensual', estado: 'alerta' },
-        { id: 2, nombre: 'Nivel de Morosidad', area: 'Comercial', tipo: 'Menor es mejor', meta: '< 15%', unidad: '%', frecuencia: 'Mensual', estado: 'critico' },
-        { id: 3, nombre: 'SAIDI — Duración Interrupciones', area: 'Calidad de Servicio', tipo: 'Menor es mejor', meta: '< 10 hs', unidad: 'hs', frecuencia: 'Mensual', estado: 'critico' },
-        { id: 4, nombre: 'Avance Físico de Proyectos', area: 'Obras', tipo: 'Mayor es mejor', meta: '≥ 95%', unidad: '%', frecuencia: 'Mensual', estado: 'valido' },
-        { id: 5, nombre: 'Disponibilidad de Red', area: 'Operaciones', tipo: 'Mayor es mejor', meta: '≥ 99%', unidad: '%', frecuencia: 'Mensual', estado: 'valido' }
+        { id: 1, nombre: 'Índice de desgaste del staff', area: 'Gestión Innovación', tipo: 'Menor es mejor', meta: '< 58', unidad: 'pts', frecuencia: 'Mensual', estado: 'alerta' },
+        { id: 2, nombre: 'Tasa de ausentismo', area: 'Gestión Innovación', tipo: 'Menor es mejor', meta: '< 10%', unidad: '%', frecuencia: 'Mensual', estado: 'critico' },
+        { id: 3, nombre: 'Incidentes y conflictos', area: 'Inclusión Social', tipo: 'Menor es mejor', meta: '< 14', unidad: 'cant', frecuencia: 'Mensual', estado: 'critico' },
+        { id: 4, nombre: 'Clima de convivencia', area: 'Inclusión Social', tipo: 'Mayor es mejor', meta: '≥ 75', unidad: 'pts', frecuencia: 'Mensual', estado: 'valido' },
+        { id: 5, nombre: 'Participación en espacios', area: 'Desarrollo Humano', tipo: 'Mayor es mejor', meta: '≥ 65%', unidad: '%', frecuencia: 'Mensual', estado: 'valido' }
     ]);
 
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,7 +26,7 @@ export default function IndicadoresABM() {
         }
     };
 
-    const areasList = ['Comercial', 'Calidad de Servicio', 'Operaciones', 'Obras', 'Admin & Finanzas', 'Compras', 'Legales'];
+    const areasList = ['Inclusión Social', 'Desarrollo Humano', 'Salud', 'Educación Formación', 'Gestión Innovación', 'Administración', 'Logística y Operaciones'];
 
     return (
         <div className="fade-in">

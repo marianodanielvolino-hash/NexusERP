@@ -49,14 +49,17 @@ export default function AdminPage() {
                     </div>
                     <DataTable
                         rows={[
-                            { id: 1, name: "Juan Pérez", email: "jperez@test.com", role: "Ejecutivo", tenant: "Tenant A", status: "Activo" },
-                            { id: 2, name: "Ana Gómez", email: "agomez@test.com", role: "Gerente", tenant: "Tenant B", status: "Activo" },
+                            { id: 1, name: "Victoria Admin", email: "victoria@nexus.com", role: "Administrador General", tenant: "Nivel Central", status: "Activo" },
+                            { id: 2, name: "Coordinador CIS", email: "coordinador.cis@nexus.com", role: "Coordinador Territorial", tenant: "Inclusión Social", status: "Activo" },
+                            { id: 3, name: "Facilitador Bienestar", email: "bienestar@nexus.com", role: "Facilitador Bienestar", tenant: "Desarrollo Humano", status: "Activo" },
+                            { id: 4, name: "Analista Impacto", email: "evaluacion@nexus.com", role: "Analista Impacto", tenant: "Gestión Innovación", status: "Activo" },
+                            { id: 5, name: "Director Norte", email: "director.norte@nexus.com", role: "Director de Sede", tenant: "CIS-01", status: "Inactivo" },
                         ]}
                         columns={[
                             { header: "Nombre", accessorKey: "name" },
                             { header: "Email", accessorKey: "email" },
                             { header: "Rol", cell: (row) => <span style={{ fontWeight: 600 }}>{row.role}</span> },
-                            { header: "Tenant", accessorKey: "tenant" },
+                            { header: "Tenant / Área", accessorKey: "tenant" },
                             { header: "Estado", cell: (row) => <span style={{ color: row.status === "Activo" ? "var(--verde)" : "var(--rojo)" }}>{row.status}</span> },
                             { header: "Acciones", cell: () => <button className="btn" style={{ background: "var(--bg)", border: "1px solid var(--borde)", padding: "4px 8px" }}>Editar</button> }
                         ]}
@@ -67,18 +70,20 @@ export default function AdminPage() {
             {activeTab === "tenants" && (
                 <div className="widget-card fade-in">
                     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "1rem" }}>
-                        <h3 style={{ margin: 0 }}>Gestión de Tenants</h3>
-                        <button className="btn btn-primary" style={{ padding: "6px 12px", fontSize: "0.8rem" }}>+ Añadir Tenant</button>
+                        <h3 style={{ margin: 0 }}>Gestión de Tenants (Centros)</h3>
+                        <button className="btn btn-primary" style={{ padding: "6px 12px", fontSize: "0.8rem" }}>+ Añadir Centro</button>
                     </div>
                     <DataTable
                         rows={[
-                            { id: "T1", name: "Empresa Alpha S.A.", domain: "alpha.com", plan: "Enterprise", status: "Activo" },
-                            { id: "T2", name: "Beta Corp", domain: "betacorp.io", plan: "Pro", status: "Suspendido" },
+                            { id: "CIS-01", name: "Centro Inclusión Norte", domain: "norte.nexus.net", plan: "Enterprise", status: "Activo" },
+                            { id: "CIS-02", name: "Centro Desarrollo Sur", domain: "sur.nexus.net", plan: "Enterprise", status: "Activo" },
+                            { id: "CIS-03", name: "Centro Bienestar Oeste", domain: "oeste.nexus.net", plan: "Pro", status: "Activo" },
+                            { id: "CIS-04", name: "Nuevo Espacio Este", domain: "este.nexus.net", plan: "Básico", status: "Suspendido" },
                         ]}
                         columns={[
                             { header: "ID", accessorKey: "id" },
-                            { header: "Nombre", accessorKey: "name" },
-                            { header: "Dominio", accessorKey: "domain" },
+                            { header: "Nombre del Dispositivo", accessorKey: "name" },
+                            { header: "Dominio Intranet", accessorKey: "domain" },
                             { header: "Plan", accessorKey: "plan" },
                             { header: "Estado", cell: (row) => <span style={{ color: row.status === "Activo" ? "var(--verde)" : "var(--rojo)" }}>{row.status}</span> },
                             { header: "Acciones", cell: () => <button className="btn" style={{ background: "var(--bg)", border: "1px solid var(--borde)", padding: "4px 8px" }}>Editar</button> }
@@ -95,13 +100,15 @@ export default function AdminPage() {
                     </div>
                     <DataTable
                         rows={[
-                            { id: "ts-1", kpi: "Ventas Mensuales", year: 2026, type: "Mensual", status: "Aprobado" },
-                            { id: "ts-2", kpi: "Costo de Adquisición", year: 2026, type: "Trimestral", status: "Borrador" },
+                            { id: "TS-2026-H1", kpi: "Índice de Desgaste Staff", year: 2026, type: "Semestral", status: "Aprobado" },
+                            { id: "TS-2026-Q1", kpi: "Participación Comunitaria", year: 2026, type: "Trimestral", status: "Aprobado" },
+                            { id: "TS-2026-M04", kpi: "Clima de Convivencia", year: 2026, type: "Mensual", status: "Borrador" },
                         ]}
                         columns={[
+                            { header: "Planilla Múltiple", accessorKey: "id" },
                             { header: "KPI Vinculado", accessorKey: "kpi" },
-                            { header: "Año", accessorKey: "year" },
-                            { header: "Periodicidad", accessorKey: "type" },
+                            { header: "Año Base", accessorKey: "year" },
+                            { header: "Corte", accessorKey: "type" },
                             { header: "Estado", accessorKey: "status" },
                             { header: "Acciones", cell: () => <button className="btn" style={{ background: "var(--bg)", border: "1px solid var(--borde)", padding: "4px 8px" }}>Editar</button> }
                         ]}

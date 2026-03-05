@@ -9,8 +9,8 @@ import { Status } from "@/lib/types";
 
 // Fake mock items simulating pending tasks for managers and executives
 const MOCK_INBOX_ROWS = [
-    { taskId: "t1", kpiId: "kpi-4", kpiName: "Satisfacción al Cliente (CSAT)", areaName: "Comercial", value: "89%", target: "≥ 90%", status: "alert" as Status, dateSubmitted: "Hoy 10:30am", submittedBy: "Juan P. (REF)" },
-    { taskId: "t2", kpiId: "kpi-5", kpiName: "Reducción de Gastos", areaName: "Finanzas", value: "$450k", target: "< $400k", status: "critical" as Status, dateSubmitted: "Ayer", submittedBy: "Maria C. (REF)" },
+    { taskId: "t1", kpiId: "BURNOUT_IDX", kpiName: "Índice de desgaste del staff", areaName: "CIS-01", value: "68", target: "< 58", status: "critical" as Status, dateSubmitted: "Hoy 10:30am", submittedBy: "Facilitador Bienestar" },
+    { taskId: "t2", kpiId: "ACTIVITY_CONT", kpiName: "Continuidad de actividades", areaName: "CIS-05", value: "70%", target: "> 85%", status: "alert" as Status, dateSubmitted: "Ayer", submittedBy: "Coordinador CIS" },
 ];
 
 export default function ValidacionesPage() {
@@ -76,8 +76,8 @@ export default function ValidacionesPage() {
 
             <FilterBar
                 filters={[
-                    { key: "areaId", label: "Área", options: [{ label: "Comercial", value: "a1" }, { label: "Finanzas", value: "a2" }] },
-                    { key: "status", label: "Estado Semáforo", options: [{ label: "En Meta", value: "ok" }, { label: "Crítico", value: "critical" }] }
+                    { key: "areaId", label: "Área/Centro", options: [{ label: "CIS-01", value: "CIS-01" }, { label: "CIS-05", value: "CIS-05" }] },
+                    { key: "status", label: "Estado Semáforo", options: [{ label: "En Meta", value: "ok" }, { label: "Alerta", value: "alert" }, { label: "Crítico", value: "critical" }] }
                 ]}
                 values={filters}
                 onChange={setFilters}

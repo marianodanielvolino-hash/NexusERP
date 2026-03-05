@@ -106,7 +106,7 @@ export function Topbar() {
                         fontWeight: 'bold',
                         marginLeft: '0.5rem',
                         cursor: 'pointer'
-                    }}>EJ</div>
+                    }}>VA</div>
                 </div>
             </div>
         </div>
