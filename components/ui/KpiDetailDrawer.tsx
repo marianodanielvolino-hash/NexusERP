@@ -2,16 +2,20 @@
 
 import React, { useState } from "react";
 import { Role } from "@/lib/types";
+import { saveKpiValue } from "@/lib/actions/data";
 
 interface KpiDetailDrawerProps {
     open: boolean;
-    context: { tenantId?: string; periodId?: string; kpiId?: string; kpiDataId?: string };
+    context: { tenantId?: string; periodId?: string; kpiId?: string; entryId?: string };
     userRoles: Role[];
     onClose: () => void;
 }
 
 export function KpiDetailDrawer({ open, context, userRoles, onClose }: KpiDetailDrawerProps) {
-    const [activeTab, setActiveTab] = useState("summary");
+    const [activeTab, setActiveTab] = useState("entry"); // Default to entry for Phase 4 focus
+    const [kpiValue, setKpiValue] = useState("");
+    const [kpiObs, setKpiObs] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
 
     if (!open) return null;
 
@@ -100,8 +104,31 @@ export function KpiDetailDrawer({ open, context, userRoles, onClose }: KpiDetail
                 </div>
 
                 <div style={{ flex: 1, overflowY: "auto", padding: "1.5rem", background: "var(--bg)" }}>
-                    {activeTab === "summary" && <div>Componente: Renders KpiSummaryTab</div>}
-                    {activeTab === "entry" && <div>Componente: Renders KpiEntryTab (FormSchema Driver)</div>}
+                    {activeTab === "summary" && <div style={{ color: "var(--texto2)", fontSize: "0.9rem" }}>Componente: Renders KpiSummaryTab (Mock)</div>}
+                    {activeTab === "entry" && (
+                        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+                            <div style={{ background: "var(--bg3)", padding: "1rem", borderRadius: "8px", border: "1px solid var(--borde)" }}>
+                                <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--texto2)", display: "block", marginBottom: "0.5rem" }}>Valor del Período</label>
+                                <input
+                                    type="number"
+                                    value={kpiValue}
+                                    onChange={e => setKpiValue(e.target.value)}
+                                    placeholder="Ingrese valor numérico..."
+                                    style={{ width: "100%", padding: "0.8rem", background: "var(--bg)", border: "1px solid var(--borde)", color: "var(--texto)", borderRadius: "6px", outline: "none" }}
+                                />
+                            </div>
+                            <div style={{ background: "var(--bg3)", padding: "1rem", borderRadius: "8px", border: "1px solid var(--borde)" }}>
+                                <label style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--texto2)", display: "block", marginBottom: "0.5rem" }}>Desviaciones u Observaciones (Opcional)</label>
+                                <textarea
+                                    value={kpiObs}
+                                    onChange={e => setKpiObs(e.target.value)}
+                                    placeholder="Justifique el valor si hubo caídas..."
+                                    rows={4}
+                                    style={{ width: "100%", padding: "0.8rem", background: "var(--bg)", border: "1px solid var(--borde)", color: "var(--texto)", borderRadius: "6px", outline: "none", resize: "none" }}
+                                />
+                            </div>
+                        </div>
+                    )}
                     {activeTab === "evidence" && <div>Componente: Renders KpiEvidenceTab (Dropzone + Signed URL logic)</div>}
                     {activeTab === "workflow" && <div>Componente: Renders KpiWorkflowTab (Timeline & Action Buttons)</div>}
                     {activeTab === "history" && <div>Componente: Renders KpiHistoryTab (Data Series & Export)</div>}
@@ -109,8 +136,32 @@ export function KpiDetailDrawer({ open, context, userRoles, onClose }: KpiDetail
                 </div>
 
                 <div style={{ padding: "1rem 1.5rem", borderTop: "1px solid var(--borde)", display: "flex", justifyContent: "flex-end", gap: "1rem", background: "var(--bg2)" }}>
-                    <button className="btn" style={{ background: "transparent", border: "1px solid var(--borde)" }} onClick={onClose}>Cerrar</button>
-                    {activeTab === "entry" && <button className="btn btn-primary">Guardar Cambios</button>}
+                    <button className="btn" style={{ background: "transparent", border: "1px solid var(--borde)", color: "var(--texto)" }} onClick={onClose}>Cerrar</button>
+                    {activeTab === "entry" && (
+                        <button
+                            className="btn btn-primary"
+                            disabled={!kpiValue || isSaving}
+                            onClick={async () => {
+                                setIsSaving(true);
+                                try {
+                                    if (context.entryId) {
+                                        await saveKpiValue(context.entryId, Number(kpiValue), kpiObs);
+                                        setKpiValue("");
+                                        setKpiObs("");
+                                        onClose();
+                                        window.location.reload(); // Refresh table
+                                    } else {
+                                        alert("Error: Faltan datos del contexto de la fila (Entry ID).");
+                                    }
+                                } catch (e: any) {
+                                    alert(e.message || "Error al guardar");
+                                }
+                                setIsSaving(false);
+                            }}
+                        >
+                            {isSaving ? "Guardando..." : "Guardar Valor"}
+                        </button>
+                    )}
                     {activeTab === "workflow" && <button className="btn" style={{ background: "var(--verde)", color: "white" }}>Aprobar / Avanzar</button>}
                 </div>
             </div>

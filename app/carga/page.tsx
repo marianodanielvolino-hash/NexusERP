@@ -23,7 +23,7 @@ export default function CargaChecklistPage() {
     const [filters, setFilters] = useState<Record<string, string>>({ areaId: "", state: "" });
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
-    const [selectedKpiId, setSelectedKpiId] = useState<string | null>(null);
+    const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
 
     const columns: ColumnDef<any>[] = [
         {
@@ -81,7 +81,7 @@ export default function CargaChecklistPage() {
                     rows={kpis}
                     columns={columns}
                     onRowClick={(row) => {
-                        setSelectedKpiId(row.kpiId);
+                        setSelectedEntryId(row.entryId);
                         setDrawerOpen(true);
                     }}
                 />
@@ -91,7 +91,7 @@ export default function CargaChecklistPage() {
             <KpiDetailDrawer
                 open={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
-                context={{ periodId: "2026-03", kpiId: selectedKpiId || "" }}
+                context={{ periodId: "2026-03", entryId: selectedEntryId || "" }}
                 userRoles={["OP", "REF"]} // Simulate Operador/Referente
             />
 
