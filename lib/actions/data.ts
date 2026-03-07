@@ -36,16 +36,30 @@ export async function getKpisForCarga(periodId?: string) {
         }
 
         // Transformar para la tabla UI
-        return data.map((d: any) => ({
-            kpiId: d.kpi_id,
-            name: d.kpi_definitions?.nombre || "N/A",
-            target: d.kpi_definitions?.meta || "N/A",
-            value: d.valor !== null ? String(d.valor) : "",
-            status: "ok", // simplificado
-            state: d.estado_flujo ? d.estado_flujo.toLowerCase() : "draft",
-            lastUpdatedAt: d.updated_at ? new Date(d.updated_at).toLocaleDateString() : "-",
-            entryId: d.entry_id
-        }));
+        return data.map((d: any) => {
+            const val = d.valor !== null ? Number(d.valor) : null;
+            const target = Number(d.kpi_definitions?.meta);
+            const threshold = Number(d.kpi_definitions?.umbral_alerta);
+
+            let status: 'ok' | 'alert' | 'critical' = 'ok';
+            if (val !== null) {
+                // Lógica de semáforo: si es menor al umbral es crítico, si está entre umbral y meta es alerta.
+                // (Asumiendo "Mayor es mejor" por defecto en este prototipo)
+                if (val < threshold) status = 'critical';
+                else if (val < target) status = 'alert';
+            }
+
+            return {
+                kpiId: d.kpi_id,
+                name: d.kpi_definitions?.nombre || "N/A",
+                target: d.kpi_definitions?.meta || "N/A",
+                value: val !== null ? String(val) : "",
+                status: status,
+                state: d.estado_flujo ? d.estado_flujo.toLowerCase() : "draft",
+                lastUpdatedAt: d.updated_at ? new Date(d.updated_at).toLocaleDateString() : "-",
+                entryId: d.entry_id
+            };
+        });
     } catch (err) {
         console.error("Exception in getKpisForCarga:", err);
         return [];
@@ -178,9 +192,26 @@ export async function getKpiDefinitions() {
 }
 
 export async function getPeriodos() {
-    return [
-        { id: "P-2026-03", name: "Marzo 2026", status: "Abierto", progress: "45%" },
-        { id: "P-2026-02", name: "Febrero 2026", status: "Cerrado", progress: "100%" },
-        { id: "P-2026-01", name: "Enero 2026", status: "Cerrado", progress: "100%" },
-    ];
+    try {
+        const supabase = await createClient();
+        const { data, error } = await supabase
+            .from('periods')
+            .select('*')
+            .order('fecha_inicio', { ascending: false });
+
+        if (error) {
+            console.error("Error fetching periods:", error);
+            return [];
+        }
+
+        return data.map(p => ({
+            id: p.period_id,
+            name: p.nombre,
+            status: p.estado,
+            progress: p.estado === 'Cerrado' ? "100%" : "45%"
+        }));
+    } catch (err) {
+        console.error("Exception in getPeriodos:", err);
+        return [];
+    }
 }

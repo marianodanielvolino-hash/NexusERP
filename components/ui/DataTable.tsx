@@ -1,4 +1,6 @@
 import React from "react";
+import { EmptyState } from "./EmptyState";
+import { FolderOpen } from "lucide-react";
 
 export interface ColumnDef<T> {
     header: string;
@@ -17,13 +19,14 @@ interface DataTableProps<T> {
 export function DataTable<T>({ rows, columns, onRowClick, emptyStateLabel = "No hay datos para mostrar", loading = false }: DataTableProps<T>) {
     return (
         <div style={{
-            background: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            background: 'var(--bg3)',
+            borderRadius: 'var(--radius-md)',
+            boxShadow: 'var(--shadow-card)',
+            border: '1px solid var(--borde)',
             overflowX: 'auto'
         }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                <thead style={{ background: 'var(--bg)', color: 'var(--texto2)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <thead style={{ background: 'var(--bg2)', color: 'var(--texto2)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     <tr>
                         {columns.map((col, idx) => (
                             <th key={idx} style={{ padding: '1rem', borderBottom: '1px solid var(--borde)' }}>
@@ -41,8 +44,14 @@ export function DataTable<T>({ rows, columns, onRowClick, emptyStateLabel = "No 
                         </tr>
                     ) : rows.length === 0 ? (
                         <tr>
-                            <td colSpan={columns.length} style={{ padding: '2rem', textAlign: 'center', color: 'var(--texto2)' }}>
-                                {emptyStateLabel}
+                            <td colSpan={columns.length} style={{ padding: '0' }}>
+                                <div style={{ transform: 'scale(0.95)' }}>
+                                    <EmptyState
+                                        title="Sin registros"
+                                        description={emptyStateLabel}
+                                        icon={<FolderOpen size={36} strokeWidth={1} />}
+                                    />
+                                </div>
                             </td>
                         </tr>
                     ) : (

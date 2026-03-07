@@ -1,6 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { signOut } from "@/lib/actions/auth";
+import { EmptyState } from "./ui/EmptyState";
+import { SlideDrawer } from "./ui/SlideDrawer";
+import { Skeleton, CardSkeleton } from "./ui/Skeleton";
+import { Tooltip } from "./ui/Tooltip";
 
 // ─── DEMO DATA ────────────────────────────────────────────────────────────────
 const DEMO_DATA = {
@@ -341,6 +347,36 @@ function MiniBar({ timeline, color }: any) {
     );
 }
 
+// ─── ICONS (Futuristic SVGs) ──────────────────────────────────────────────────
+const ICONS = {
+    Hub: () => (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+        </svg>
+    ),
+    Integrations: () => (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
+        </svg>
+    ),
+    Admin: () => (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+    ),
+    Projects: () => (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+        </svg>
+    ),
+    Stats: () => (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
+        </svg>
+    )
+};
+
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function NexusPlatform() {
     const [view, setView] = useState("hub"); // hub | client | project | kpis | integrations | admin
@@ -352,9 +388,33 @@ export default function NexusPlatform() {
     const [aiInput, setAiInput] = useState("");
     const [aiLoading, setAiLoading] = useState(false);
     const [notification, setNotification] = useState<any>(null);
-    const aiRef = useRef<any>(null);
+    const [user, setUser] = useState<any>(null);
+    const [client, setClient] = useState<any>(DEMO_DATA.clients[0]);
 
-    const client = DEMO_DATA.clients.find(c => c.id === selectedClient);
+    // --- Phase 2: Action Feedback, perceived speed & temporal context ---
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const [drawerContent, setDrawerContent] = useState<"new_client" | "new_project" | "config" | null>(null);
+    const [isSimulatingLoad, setIsSimulatingLoad] = useState(false);
+    // Hardcoded initial contextual period
+    const [globalPeriod, setGlobalPeriod] = useState("Oct'25");
+
+    // --- Phase 3: Alerts Center and Settings
+    const [alertsOpen, setAlertsOpen] = useState(false);
+    const [themeToggle, setThemeToggle] = useState<"dark" | "light">("dark");
+
+    const brandColor = client?.color || '#3b82f6'; // Dynamic mapping
+    const aiRef = useRef<any>(null);
+    const supabase = createClient();
+
+    useEffect(() => {
+        const fetchUser = async () => {
+            const { data: { user } } = await supabase.auth.getUser();
+            setUser(user);
+        };
+        fetchUser();
+    }, []);
+
+    const activeClient = DEMO_DATA.clients.find(c => c.id === selectedClient);
     const projects = selectedClient ? (DEMO_DATA.projects as any)[selectedClient] || [] : [];
     const project = projects.find((p: any) => p.id === selectedProject);
     const kpiData = selectedProject ? (DEMO_DATA.kpis as any)[selectedProject] : null;
@@ -365,14 +425,31 @@ export default function NexusPlatform() {
     };
 
     const selectClient = (cid: string) => {
+        setIsSimulatingLoad(true);
         setSelectedClient(cid);
         setSelectedProject(null);
         setView("client");
+        setTimeout(() => setIsSimulatingLoad(false), 600);
     };
 
     const selectProject = (pid: string) => {
+        setIsSimulatingLoad(true);
         setSelectedProject(pid);
         setView("kpis");
+        setTimeout(() => setIsSimulatingLoad(false), 600);
+    };
+
+    const changeView = (v: string) => {
+        setIsSimulatingLoad(true);
+        setView(v);
+        setSelectedClient(null);
+        setSelectedProject(null);
+        setTimeout(() => setIsSimulatingLoad(false), 500);
+    };
+
+    const openDrawer = (content: "new_client" | "new_project" | "config") => {
+        setDrawerContent(content);
+        setDrawerOpen(true);
     };
 
     const sendAI = async () => {
@@ -541,26 +618,26 @@ Responde de forma concisa y útil en español. Si hay alertas o indicadores crí
 
     const SideNav = () => (
         <div style={styles.sidebar}>
-            <div style={styles.sideSection}>Plataforma</div>
+            <div style={styles.sideSection}>Sistema</div>
             {[
-                { label: "Hub Global", icon: "◉", id: "hub" },
-                { label: "Integraciones", icon: "🔌", id: "integrations" },
-                { label: "Administración", icon: "⚙️", id: "admin" },
+                { label: "Hub de Control", icon: <ICONS.Hub />, id: "hub" },
+                { label: "Integraciones", icon: <ICONS.Integrations />, id: "integrations" },
+                { label: "Administración", icon: <ICONS.Admin />, id: "admin" },
             ].map(item => (
-                <div key={item.id} style={styles.sideItem(view === item.id && !selectedClient)} onClick={() => { setView(item.id); setSelectedClient(null); setSelectedProject(null); }}>
-                    <span>{item.icon}</span>{item.label}
+                <div key={item.id} style={styles.sideItem(view === item.id && !selectedClient)} onClick={() => changeView(item.id)}>
+                    <span style={{ display: 'flex' }}>{item.icon}</span>{item.label}
                 </div>
             ))}
 
             {selectedClient && (
                 <>
-                    <div style={styles.sideSection}>Cliente: {client?.name}</div>
-                    <div style={styles.sideItem(view === "client")} onClick={() => { setView("client"); setSelectedProject(null); }}>
-                        <span>📁</span>Proyectos
+                    <div style={styles.sideSection}>Organización: {client?.name}</div>
+                    <div style={styles.sideItem(view === "client")} onClick={() => { setView("client"); setSelectedProject(null); setIsSimulatingLoad(true); setTimeout(() => setIsSimulatingLoad(false), 400); }}>
+                        <span style={{ display: 'flex' }}><ICONS.Projects /></span>Portafolio
                     </div>
                     {projects.map((p: any) => (
                         <div key={p.id} style={styles.sideItem(selectedProject === p.id)} onClick={() => selectProject(p.id)}>
-                            <span>{p.icon}</span>
+                            <span style={{ fontSize: '18px' }}>{p.icon}</span>
                             <span style={{ fontSize: "12px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</span>
                         </div>
                     ))}
@@ -569,13 +646,32 @@ Responde de forma concisa y útil en español. Si hay alertas o indicadores crí
 
             <div style={{ flex: 1 }} />
             <div style={{ padding: "12px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px" }}>
-                    <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "linear-gradient(135deg,#6366f1,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: "700" }}>EJ</div>
-                    <div>
-                        <div style={{ fontSize: "12px", fontWeight: "600", color: "#f1f5f9" }}>Ejecutivo</div>
-                        <div style={{ fontSize: "11px", color: "#475569" }}>Super Admin</div>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px", marginBottom: "8px" }}>
+                    <div style={{ width: "28px", height: "28px", borderRadius: "50%", background: "linear-gradient(135deg,#6366f1,#8b5cf6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "12px", fontWeight: "700" }}>
+                        {user?.email?.substring(0, 2).toUpperCase() || "U"}
+                    </div>
+                    <div style={{ overflow: "hidden" }}>
+                        <div style={{ fontSize: "12px", fontWeight: "600", color: "#f1f5f9", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {user?.email?.split('@')[0] || "Cargando..."}
+                        </div>
+                        <div style={{ fontSize: "11px", color: "#475569" }}>{user?.app_metadata?.rol || "Usuario"}</div>
                     </div>
                 </div>
+                <button
+                    onClick={() => signOut()}
+                    style={{
+                        width: '100%',
+                        padding: '6px',
+                        fontSize: '11px',
+                        background: 'transparent',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        color: '#94a3b8',
+                        borderRadius: '6px',
+                        cursor: 'pointer'
+                    }}
+                >
+                    Cerrar Sesión
+                </button>
             </div>
         </div>
     );
@@ -599,14 +695,14 @@ Responde de forma concisa y útil en español. Si hay alertas o indicadores crí
                 {/* Stats */}
                 <div style={{ ...styles.grid4, marginBottom: "24px" }}>
                     {[
-                        { label: "Clientes Activos", value: DEMO_DATA.clients.filter(c => c.status === "active").length, icon: "🏢", color: "#6366f1", sub: `${DEMO_DATA.clients.length} totales` },
-                        { label: "Proyectos", value: totalProjects, icon: "📁", color: "#10b981", sub: "en ejecución" },
-                        { label: "KPIs Activos", value: totalKPIs, icon: "📊", color: "#f59e0b", sub: "con datos cargados" },
+                        { label: "Clientes Activos", value: DEMO_DATA.clients.filter(c => c.status === "active").length, icon: <ICONS.Projects />, color: "#6366f1", sub: `${DEMO_DATA.clients.length} totales` },
+                        { label: "Proyectos", value: totalProjects, icon: <ICONS.Hub />, color: "#10b981", sub: "en ejecución" },
+                        { label: "KPIs Activos", value: totalKPIs, icon: <ICONS.Stats />, color: "#f59e0b", sub: "con datos cargados" },
                         { label: "Salud Promedio", value: `${avgHealth}%`, icon: "❤️", color: "#ec4899", sub: "todas las áreas" },
                     ].map((s, i) => (
-                        <div key={i} style={{ ...styles.card, ...styles.cardPad }}>
+                        <div key={i} style={{ ...styles.card, ...styles.cardPad, border: `1px solid ${s.color}22` }}>
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
-                                <div style={{ fontSize: "22px" }}>{s.icon}</div>
+                                <div style={{ color: s.color }}>{s.icon}</div>
                                 <div style={{ ...styles.tag(s.color) }}>●</div>
                             </div>
                             <div style={{ fontSize: "26px", fontWeight: "800", color: s.color, marginBottom: "2px" }}>{s.value}</div>
@@ -622,56 +718,67 @@ Responde de forma concisa y útil en español. Si hay alertas o indicadores crí
                         <h2 style={styles.h2}>Clientes</h2>
                         <p style={styles.sub}>Seleccioná un cliente para ver sus proyectos e indicadores</p>
                     </div>
-                    <button style={styles.btn("primary")} onClick={() => notify("Funcionalidad en desarrollo: Alta de nuevo cliente", "info")}>+ Nuevo Cliente</button>
+                    {user?.app_metadata?.rol !== 'Operativo' && (
+                        <button style={styles.btn("primary")} onClick={() => openDrawer("new_client")}>+ Nuevo Cliente</button>
+                    )}
                 </div>
 
-                <div style={{ ...styles.grid2, marginBottom: "24px" }}>
-                    {DEMO_DATA.clients.map(c => {
-                        const cProjects = (DEMO_DATA.projects as any)[c.id] || [];
-                        const cKPIData = cProjects.map((p: any) => (DEMO_DATA.kpis as any)[p.id]).filter(Boolean);
-                        const avgScore = cKPIData.length ? Math.round(cKPIData.reduce((acc: number, d: any) => {
-                            const scores = Object.values(d.areas).map((a: any) => a.score);
-                            return acc + scores.reduce((a, b) => a + b, 0) / scores.length;
-                        }, 0) / cKPIData.length) : null;
+                {DEMO_DATA.clients.length === 0 ? (
+                    <EmptyState
+                        title="No hay clientes registrados"
+                        description="Comienza agregando tu primer cliente para estructurar los proyectos y KPIs."
+                        actionLabel="Crear Primer Cliente"
+                        onAction={() => notify("Alta de nuevo cliente (En desarrollo)", "info")}
+                    />
+                ) : (
+                    <div style={{ ...styles.grid2, marginBottom: "24px" }}>
+                        {DEMO_DATA.clients.map(c => {
+                            const cProjects = (DEMO_DATA.projects as any)[c.id] || [];
+                            const cKPIData = cProjects.map((p: any) => (DEMO_DATA.kpis as any)[p.id]).filter(Boolean);
+                            const avgScore = cKPIData.length ? Math.round(cKPIData.reduce((acc: number, d: any) => {
+                                const scores = Object.values(d.areas).map((a: any) => a.score);
+                                return acc + scores.reduce((a, b) => a + b, 0) / scores.length;
+                            }, 0) / cKPIData.length) : null;
 
-                        return (
-                            <div key={c.id} onClick={() => selectClient(c.id)} style={{
-                                ...styles.card, cursor: "pointer", transition: "all 0.2s",
-                                border: `1px solid rgba(255,255,255,0.08)`,
-                                position: "relative", overflow: "hidden",
-                            }}
-                                onMouseEnter={e => e.currentTarget.style.border = `1px solid ${c.color}55`}
-                                onMouseLeave={e => e.currentTarget.style.border = "1px solid rgba(255,255,255,0.08)"}
-                            >
-                                <div style={{ position: "absolute", top: 0, right: 0, width: "160px", height: "160px", background: `radial-gradient(circle at top right, ${c.color}15, transparent 70%)`, pointerEvents: "none" }} />
-                                <div style={{ padding: "20px 20px 0" }}>
-                                    <div style={{ display: "flex", alignItems: "flex-start", gap: "14px", marginBottom: "14px" }}>
-                                        <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: `${c.color}22`, border: `1px solid ${c.color}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", flexShrink: 0 }}>{c.logo}</div>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
-                                                <h2 style={{ ...styles.h2, margin: 0 }}>{c.name}</h2>
-                                                <span style={{ ...styles.pill, background: c.status === "active" ? "rgba(16,185,129,0.15)" : "rgba(99,102,241,0.15)", color: c.status === "active" ? "#10b981" : "#818cf8", fontSize: "10px" }}>
-                                                    {c.status === "active" ? "ACTIVO" : "PILOTO"}
-                                                </span>
+                            return (
+                                <div key={c.id} onClick={() => selectClient(c.id)} style={{
+                                    ...styles.card, cursor: "pointer", transition: "all 0.2s",
+                                    border: `1px solid rgba(255,255,255,0.08)`,
+                                    position: "relative", overflow: "hidden",
+                                }}
+                                    onMouseEnter={e => e.currentTarget.style.border = `1px solid ${c.color}55`}
+                                    onMouseLeave={e => e.currentTarget.style.border = "1px solid rgba(255,255,255,0.08)"}
+                                >
+                                    <div style={{ position: "absolute", top: 0, right: 0, width: "160px", height: "160px", background: `radial-gradient(circle at top right, ${c.color}15, transparent 70%)`, pointerEvents: "none" }} />
+                                    <div style={{ padding: "20px 20px 0" }}>
+                                        <div style={{ display: "flex", alignItems: "flex-start", gap: "14px", marginBottom: "14px" }}>
+                                            <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: `${c.color}22`, border: `1px solid ${c.color}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", flexShrink: 0 }}>{c.logo}</div>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
+                                                    <h2 style={{ ...styles.h2, margin: 0 }}>{c.name}</h2>
+                                                    <span style={{ ...styles.pill, background: c.status === "active" ? "rgba(16,185,129,0.15)" : "rgba(99,102,241,0.15)", color: c.status === "active" ? "#10b981" : "#818cf8", fontSize: "10px" }}>
+                                                        {c.status === "active" ? "ACTIVO" : "PILOTO"}
+                                                    </span>
+                                                </div>
+                                                <div style={{ fontSize: "12px", color: "#64748b" }}>{c.sector} · {c.country}</div>
                                             </div>
-                                            <div style={{ fontSize: "12px", color: "#64748b" }}>{c.sector} · {c.country}</div>
                                         </div>
+                                        <div style={{ fontSize: "12px", color: "#475569", marginBottom: "16px", lineHeight: "1.5" }}>{c.fullName}</div>
                                     </div>
-                                    <div style={{ fontSize: "12px", color: "#475569", marginBottom: "16px", lineHeight: "1.5" }}>{c.fullName}</div>
-                                </div>
 
-                                <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "12px 20px", display: "flex", gap: "20px", alignItems: "center" }}>
-                                    <div style={{ display: "flex", gap: "16px", flex: 1 }}>
-                                        <div><div style={{ fontSize: "18px", fontWeight: "700", color: c.color }}>{cProjects.length}</div><div style={{ fontSize: "11px", color: "#475569" }}>Proyectos</div></div>
-                                        <div><div style={{ fontSize: "18px", fontWeight: "700", color: "#94a3b8" }}>{c.users}</div><div style={{ fontSize: "11px", color: "#475569" }}>Usuarios</div></div>
-                                        {avgScore && <div><div style={{ fontSize: "18px", fontWeight: "700", color: statusColor(healthStatus(avgScore)) }}>{avgScore}%</div><div style={{ fontSize: "11px", color: "#475569" }}>Salud IGG</div></div>}
+                                    <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", padding: "12px 20px", display: "flex", gap: "20px", alignItems: "center" }}>
+                                        <div style={{ display: "flex", gap: "16px", flex: 1 }}>
+                                            <div><div style={{ fontSize: "18px", fontWeight: "700", color: c.color }}>{cProjects.length}</div><div style={{ fontSize: "11px", color: "#475569" }}>Proyectos</div></div>
+                                            <div><div style={{ fontSize: "18px", fontWeight: "700", color: "#94a3b8" }}>{c.users}</div><div style={{ fontSize: "11px", color: "#475569" }}>Usuarios</div></div>
+                                            {avgScore && <div><div style={{ fontSize: "18px", fontWeight: "700", color: statusColor(healthStatus(avgScore)) }}>{avgScore}%</div><div style={{ fontSize: "11px", color: "#475569" }}>Salud IGG</div></div>}
+                                        </div>
+                                        <div style={{ ...styles.tag(c.color), fontSize: "11px" }}>{c.plan}</div>
                                     </div>
-                                    <div style={{ ...styles.tag(c.color), fontSize: "11px" }}>{c.plan}</div>
                                 </div>
-                            </div>
-                        );
-                    })}
-                </div>
+                            );
+                        })}
+                    </div>
+                )}
 
                 {/* Integrations preview */}
                 <IntegrationsStrip />
@@ -681,29 +788,31 @@ Responde de forma concisa y útil en español. Si hay alertas o indicadores crí
 
     // ── CLIENT VIEW ───────────────────────────────────────────────────────────
     const ClientView = () => {
-        if (!client) return null;
+        if (!activeClient) return null;
         return (
             <div>
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginBottom: "24px" }}>
-                    <div style={{ width: "52px", height: "52px", borderRadius: "14px", background: `${client.color}22`, border: `1px solid ${client.color}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "26px" }}>{client.logo}</div>
+                    <div style={{ width: "52px", height: "52px", borderRadius: "14px", background: `${activeClient.color}22`, border: `1px solid ${activeClient.color}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "26px" }}>{activeClient.logo}</div>
                     <div style={{ flex: 1 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                            <h1 style={styles.h1}>{client.name}</h1>
+                            <h1 style={styles.h1}>{activeClient.name}</h1>
                             <span style={{ ...styles.pill, background: "rgba(16,185,129,0.15)", color: "#10b981", fontSize: "11px" }}>● ACTIVO</span>
                         </div>
-                        <p style={styles.sub}>{client.fullName} · {client.sector} · {client.country}</p>
+                        <p style={styles.sub}>{activeClient.fullName} · {activeClient.sector} · {activeClient.country}</p>
                     </div>
-                    <div style={{ display: "flex", gap: "8px" }}>
-                        <button style={styles.btn("ghost")} onClick={() => notify("Configuración de cliente", "info")}>⚙️ Configurar</button>
-                        <button style={styles.btn("primary")} onClick={() => notify("Nuevo proyecto creado", "ok")}>+ Nuevo Proyecto</button>
-                    </div>
+                    {user?.app_metadata?.rol !== 'Operativo' && (
+                        <div style={{ display: "flex", gap: "8px" }}>
+                            <button style={styles.btn("ghost")} onClick={() => openDrawer("config")}>⚙️ Configurar</button>
+                            <button style={styles.btn("primary")} onClick={() => openDrawer("new_project")}>+ Nuevo Proyecto</button>
+                        </div>
+                    )}
                 </div>
 
                 <div style={{ ...styles.grid4, marginBottom: "24px" }}>
                     {[
-                        { label: "Plan", value: client.plan, icon: "💎" },
-                        { label: "Cliente desde", value: client.since, icon: "📅" },
-                        { label: "Usuarios", value: client.users, icon: "👥" },
+                        { label: "Plan", value: activeClient.plan, icon: "💎" },
+                        { label: "Cliente desde", value: activeClient.since, icon: "📅" },
+                        { label: "Usuarios", value: activeClient.users, icon: "👥" },
                         { label: "Proyectos", value: projects.length, icon: "📁" },
                     ].map((s, i) => (
                         <div key={i} style={{ ...styles.card, ...styles.cardPad }}>
@@ -714,42 +823,54 @@ Responde de forma concisa y útil en español. Si hay alertas o indicadores crí
                     ))}
                 </div>
 
-                <h2 style={{ ...styles.h2, marginBottom: "12px" }}>Proyectos de {client.name}</h2>
-                <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                    {projects.map((p: any) => {
-                        const kd = (DEMO_DATA.kpis as any)[p.id];
-                        const avgScore = kd ? Math.round(Object.values(kd.areas).reduce((a: any, ar: any) => a + ar.score, 0) / Object.values(kd.areas).length) : null;
-                        const st = healthStatus(avgScore || p.health);
+                <h2 style={{ ...styles.h2, marginBottom: "12px" }}>Proyectos de {activeClient.name}</h2>
+                {projects.length === 0 ? (
+                    <EmptyState
+                        title="Sin Proyectos Activos"
+                        description={`El cliente ${activeClient.name} aún no tiene proyectos asignados o en ejecución.`}
+                        actionLabel="Crear Primer Proyecto"
+                        onAction={() => openDrawer("new_project")}
+                    />
+                ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+                        {projects.map((p: any) => {
+                            const kd = (DEMO_DATA.kpis as any)[p.id];
+                            const avgScore = kd ? Math.round(Object.values(kd.areas).reduce((a: any, ar: any) => a + (ar as any).score, 0) / Object.values(kd.areas).length) : null;
+                            const st = healthStatus(avgScore || p.health);
 
-                        return (
-                            <div key={p.id} onClick={() => selectProject(p.id)} style={{
-                                ...styles.card, cursor: "pointer", transition: "all 0.2s",
-                                display: "flex", alignItems: "center", gap: "16px", padding: "18px 20px",
-                            }}
-                                onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
-                                onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.04)"}
-                            >
-                                <div style={{ fontSize: "28px" }}>{p.icon}</div>
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
-                                        <div style={{ fontWeight: "600", color: "#f1f5f9", fontSize: "15px" }}>{p.name}</div>
-                                        <span style={{ ...styles.tag(statusColor(st)), fontSize: "10px" }}>{statusLabel(st)}</span>
+                            return (
+                                <div key={p.id} onClick={() => selectProject(p.id)} style={{
+                                    ...styles.card, cursor: "pointer", transition: "all 0.2s",
+                                    display: "flex", alignItems: "center", gap: "16px", padding: "18px 20px",
+                                }}
+                                    onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                                    onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.04)"}
+                                >
+                                    <div style={{ fontSize: "28px" }}>{p.icon}</div>
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                                            <div style={{ fontWeight: "600", color: "#f1f5f9", fontSize: "15px" }}>{p.name}</div>
+                                            <span style={{ ...styles.tag(statusColor(st)), fontSize: "10px" }}>{statusLabel(st)}</span>
+                                        </div>
+                                        <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "8px" }}>{p.description}</div>
+                                        <div style={{ display: "flex", gap: "12px" }}>
+                                            {p.areas.map((a: string) => <span key={a} style={{ fontSize: "10px", color: "#475569", background: "rgba(255,255,255,0.05)", padding: "2px 7px", borderRadius: "4px" }}>{a}</span>)}
+                                            {user?.app_metadata?.rol === 'Operativo' && !p.areas.includes(user?.app_metadata?.area) && (
+                                                <span style={{ fontSize: "10px", color: "#ef4444", background: "rgba(239,68,68,0.1)", padding: "2px 7px", borderRadius: "4px" }}>Solo Lectura</span>
+                                            )}
+                                        </div>
                                     </div>
-                                    <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "8px" }}>{p.description}</div>
-                                    <div style={{ display: "flex", gap: "12px" }}>
-                                        {p.areas.map((a: string) => <span key={a} style={{ fontSize: "10px", color: "#475569", background: "rgba(255,255,255,0.05)", padding: "2px 7px", borderRadius: "4px" }}>{a}</span>)}
+                                    <div style={{ textAlign: "right", minWidth: "90px" }}>
+                                        {kd && <MiniBar timeline={kd.timeline} color={client.color} />}
+                                        <div style={{ fontSize: "11px", color: "#475569", marginTop: "4px" }}>Últ. actualización</div>
+                                        <div style={{ fontSize: "12px", color: "#94a3b8" }}>{p.lastUpdate}</div>
                                     </div>
+                                    <div style={{ fontSize: "22px", color: "#334155" }}>›</div>
                                 </div>
-                                <div style={{ textAlign: "right", minWidth: "90px" }}>
-                                    {kd && <MiniBar timeline={kd.timeline} color={client.color} />}
-                                    <div style={{ fontSize: "11px", color: "#475569", marginTop: "4px" }}>Últ. actualización</div>
-                                    <div style={{ fontSize: "12px", color: "#94a3b8" }}>{p.lastUpdate}</div>
-                                </div>
-                                <div style={{ fontSize: "22px", color: "#334155" }}>›</div>
-                            </div>
-                        );
-                    })}
-                </div>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         );
     };
@@ -777,6 +898,7 @@ Responde de forma concisa y útil en español. Si hay alertas o indicadores crí
                         </div>
                         <p style={styles.sub}>{client.name} · {project.description}</p>
                     </div>
+                    <button style={styles.btn("ghost")} onClick={() => notify("Generando PDF (Exportación Simulada)...", "info")}>📥 Exportar Rpt.</button>
                     <button style={styles.btn("primary")} onClick={() => setAiOpen(true)}>✨ Asistente IA</button>
                 </div>
 
@@ -841,19 +963,34 @@ Responde de forma concisa y útil en español. Si hay alertas o indicadores crí
                                         ? Math.min(100, (ind.target / Math.max(ind.value, 0.1)) * 100)
                                         : Math.min(100, (ind.value / ind.target) * 100);
                                     return (
-                                        <div key={i}>
-                                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
-                                                <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "500" }}>{ind.name}</div>
-                                                <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                                                    <div style={{ fontSize: "11px", color: "#475569" }}>Meta: {ind.target}{ind.unit}</div>
-                                                    <div style={{ fontSize: "13px", fontWeight: "700", color: statusColor(ind.status) }}>{ind.value}{ind.unit}</div>
-                                                    <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: statusColor(ind.status) }} />
+                                        <Tooltip
+                                            key={i}
+                                            position="left"
+                                            content={
+                                                <div style={{ padding: "4px" }}>
+                                                    <div style={{ fontSize: "11px", color: "var(--texto2)", marginBottom: "4px" }}>Detalle de KPI</div>
+                                                    <div><strong>{ind.value}</strong> {ind.unit} registrados.</div>
+                                                    <div>Se esperaba <strong>{ind.target}</strong>.</div>
+                                                    <div style={{ marginTop: "4px", color: ind.status === 'ok' ? "#10b981" : ind.status === 'alert' ? "#f59e0b" : "#ef4444" }}>
+                                                        {ind.status === 'ok' ? 'Cumplido con margen' : ind.status === 'alert' ? 'Precaución: cerca de tolerancia' : 'Límite de Riesgo sobrepasado'}
+                                                    </div>
+                                                </div>
+                                            }
+                                        >
+                                            <div style={{ width: "100%", padding: "4px 8px", borderRadius: "8px", transition: "background 0.2s", cursor: "help" }} onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.03)"} onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "5px" }}>
+                                                    <div style={{ fontSize: "12px", color: "#94a3b8", fontWeight: "500" }}>{ind.name}</div>
+                                                    <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                                                        <div style={{ fontSize: "11px", color: "#475569" }}>Meta: {ind.target}{ind.unit}</div>
+                                                        <div style={{ fontSize: "13px", fontWeight: "700", color: statusColor(ind.status) }}>{ind.value}{ind.unit}</div>
+                                                        <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: statusColor(ind.status) }} />
+                                                    </div>
+                                                </div>
+                                                <div style={{ height: "4px", background: "rgba(255,255,255,0.07)", borderRadius: "2px", overflow: "hidden" }}>
+                                                    <div style={{ height: "100%", width: `${Math.min(100, pct)}%`, background: statusColor(ind.status), borderRadius: "2px", transition: "width 1s ease" }} />
                                                 </div>
                                             </div>
-                                            <div style={{ height: "4px", background: "rgba(255,255,255,0.07)", borderRadius: "2px", overflow: "hidden" }}>
-                                                <div style={{ height: "100%", width: `${Math.min(100, pct)}%`, background: statusColor(ind.status), borderRadius: "2px", transition: "width 1s ease" }} />
-                                            </div>
-                                        </div>
+                                        </Tooltip>
                                     );
                                 })}
                             </div>
@@ -866,13 +1003,13 @@ Responde de forma concisa y útil en español. Si hay alertas o indicadores crí
     // ─── SUB-COMPONENTS ──────────────────────────────────────────────────────
     const Topbar = () => (
         <div style={styles.topbar}>
-            <div style={styles.logo} onClick={() => { setView("hub"); setSelectedClient(null); }}>
+            <div style={styles.logo} onClick={() => changeView("hub")} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
                 <div style={styles.logoMark}>NS</div>
-                <span>Nexus SCG</span>
+                <span style={{ fontWeight: 800, color: "#f8fafc", fontSize: "15px", letterSpacing: "0.05em" }}>Nexus SCG</span>
             </div>
             <div style={styles.breadcrumb}>
                 <span>/</span>
-                <span style={styles.bcrumb} onClick={() => { setView("hub"); setSelectedClient(null); }}>Hub</span>
+                <span style={styles.bcrumb} onClick={() => changeView("hub")}>Hub</span>
                 {selectedClient && (
                     <>
                         <span>/</span>
@@ -887,12 +1024,43 @@ Responde de forma concisa y útil en español. Si hay alertas o indicadores crí
                 )}
             </div>
 
+            <div style={{ flex: 1 }} />
+
+            {/* Date Picker de Topbar */}
+            <select
+                value={globalPeriod}
+                onChange={e => setGlobalPeriod(e.target.value)}
+                style={{
+                    background: "rgba(255,255,255,0.06)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    color: "#f8fafc",
+                    padding: "4px 12px",
+                    borderRadius: "6px",
+                    fontSize: "12px",
+                    fontWeight: 600,
+                    outline: "none",
+                    cursor: "pointer",
+                    marginRight: "16px"
+                }}
+            >
+                <option value="Oct'25" style={{ background: "#0a0b0f" }}>Octubre 2025</option>
+                <option value="Nov'25" style={{ background: "#0a0b0f" }}>Noviembre 2025</option>
+                <option value="Dic'25" style={{ background: "#0a0b0f" }}>Diciembre 2025</option>
+                <option value="Ene'26" style={{ background: "#0a0b0f" }}>Enero 2026</option>
+            </select>
+
             <div style={styles.topRight}>
                 <div style={styles.iconBtn} onClick={() => notify("Búsqueda avanzada de indicadores...", "info")}>🔍</div>
                 <div style={styles.iconBtn} onClick={() => setAiOpen(!aiOpen)} title="Asistente IA">✨</div>
-                <div style={{ ...styles.iconBtn, position: 'relative' }} onClick={() => notify("No hay notificaciones nuevas", "info")}>
+                <div style={{ ...styles.iconBtn, position: 'relative' }} onClick={() => setAlertsOpen(true)}>
                     🔔
                     <div style={{ position: 'absolute', top: '5px', right: '5px', width: '6px', height: '6px', background: '#ef4444', borderRadius: '50%' }} />
+                </div>
+                <div style={styles.iconBtn} onClick={() => {
+                    setThemeToggle(themeToggle === "dark" ? "light" : "dark");
+                    notify(`Toggle UI Theme => ${themeToggle === 'dark' ? 'Light' : 'Dark'} Mode (Mockup)`, 'ok');
+                }}>
+                    {themeToggle === "dark" ? "🌙" : "☀️"}
                 </div>
             </div>
         </div>
@@ -1001,25 +1169,72 @@ Responde de forma concisa y útil en español. Si hay alertas o indicadores crí
             <div style={styles.layout}>
                 <SideNav />
                 <main style={styles.main}>
-                    {view === "hub" && <HubView />}
-                    {view === "client" && <ClientView />}
-                    {view === "kpis" && <KPIsView />}
-                    {view === "integrations" && (
-                        <div style={{ textAlign: 'center', padding: '100px 0' }}>
-                            <div style={{ fontSize: '48px', marginBottom: '24px' }}>🔌</div>
-                            <h1 style={styles.h1}>Centro de Integraciones</h1>
-                            <p style={styles.sub}>Conectá Nexus Engine con tus fuentes de datos operativas</p>
+                    {isSimulatingLoad ? (
+                        <div style={{ ...styles.grid4, marginBottom: "24px", marginTop: "40px" }}>
+                            <CardSkeleton />
+                            <CardSkeleton />
+                            <CardSkeleton />
+                            <CardSkeleton />
                         </div>
-                    )}
-                    {view === "admin" && (
-                        <div style={{ textAlign: 'center', padding: '100px 0' }}>
-                            <div style={{ fontSize: '48px', marginBottom: '24px' }}>⚙️</div>
-                            <h1 style={styles.h1}>Panel de Administración</h1>
-                            <p style={styles.sub}>Gestión de usuarios, roles y permisos de la plataforma</p>
-                        </div>
+                    ) : (
+                        <>
+                            {view === "hub" && <HubView />}
+                            {view === "client" && <ClientView />}
+                            {view === "kpis" && <KPIsView />}
+                            {view === "integrations" && (
+                                <div style={{ textAlign: 'center', padding: '100px 0' }}>
+                                    <div style={{ fontSize: '48px', marginBottom: '24px' }}>🔌</div>
+                                    <h1 style={styles.h1}>Centro de Integraciones</h1>
+                                    <p style={styles.sub}>Conectá Nexus Engine con tus fuentes de datos operativas</p>
+                                </div>
+                            )}
+                            {view === "admin" && (
+                                <div style={{ textAlign: 'center', padding: '100px 0' }}>
+                                    <div style={{ fontSize: '48px', marginBottom: '24px' }}>⚙️</div>
+                                    <h1 style={styles.h1}>Panel de Administración</h1>
+                                    <p style={styles.sub}>Gestión de usuarios, roles y permisos de la plataforma</p>
+                                </div>
+                            )}
+                        </>
                     )}
                 </main>
             </div>
+
+            {/* Drawers inyección */}
+            <SlideDrawer
+                isOpen={drawerOpen}
+                onClose={() => setDrawerOpen(false)}
+                title={drawerContent === "new_client" ? "Alta de Nuevo Cliente" : drawerContent === "new_project" ? "Alta de Proyecto" : "Configuración de Cliente"}
+            >
+                <div>
+                    <p style={{ color: "var(--texto2)", fontSize: "14px", marginBottom: "20px" }}>Comienza ingresando los datos primarios. Un ingeniero de datos revisará el esquema antes del pase temporal a producción.</p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                            <label style={{ fontSize: "12px", color: "var(--texto)", fontWeight: 600 }}>Nombre / Razón Social</label>
+                            <input type="text" placeholder="Ej. Empresa SA..." style={{ background: "var(--bg3)", border: "1px solid var(--borde)", color: "white", padding: "10px", borderRadius: "8px", outline: "none" }} />
+                        </div>
+                        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                            <label style={{ fontSize: "12px", color: "var(--texto)", fontWeight: 600 }}>Sector Industrial</label>
+                            <select style={{ background: "var(--bg3)", border: "1px solid var(--borde)", color: "white", padding: "10px", borderRadius: "8px", outline: "none" }}>
+                                <option>Energía Eléctrica</option>
+                                <option>Agua y Saneamiento</option>
+                                <option>Salud</option>
+                                <option>Retail y Comercio</option>
+                            </select>
+                        </div>
+                        <button
+                            onClick={() => {
+                                setDrawerOpen(false);
+                                notify("Datos guardados en Sandbox temporal.", "ok");
+                            }}
+                            style={{ ...styles.btn("primary"), justifyContent: "center", padding: "12px", marginTop: "12px", width: "100%" }}
+                        >
+                            Guardar Borrador
+                        </button>
+                    </div>
+                </div>
+            </SlideDrawer>
+
             <Notification />
             <AIAssistant />
         </div>

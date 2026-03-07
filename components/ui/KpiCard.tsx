@@ -28,13 +28,13 @@ export function KpiCard({ kpi, value, target, delta, status, trend, onOpen, clas
         <div
             className={`kpi-card ${className || ''}`}
             style={{
-                background: 'white',
-                borderRadius: '12px',
+                background: 'var(--card)',
+                borderRadius: 'var(--radius-lg)',
                 padding: '1.25rem',
-                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)',
+                boxShadow: 'var(--shadow-card)',
                 border: '1px solid var(--borde)',
                 cursor: onOpen ? 'pointer' : 'default',
-                transition: 'transform 0.1s ease, box-shadow 0.1s ease',
+                transition: 'transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast)',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '0.75rem',
@@ -42,8 +42,8 @@ export function KpiCard({ kpi, value, target, delta, status, trend, onOpen, clas
                 width: typeof width === 'number' ? `${width}px` : width
             }}
             onClick={onOpen}
-            onMouseEnter={e => { if (onOpen) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.05)'; } }}
-            onMouseLeave={e => { if (onOpen) { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.05)'; } }}
+            onMouseEnter={e => { if (onOpen) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-glow)'; e.currentTarget.style.borderColor = 'var(--borde2)'; } }}
+            onMouseLeave={e => { if (onOpen) { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-card)'; e.currentTarget.style.borderColor = 'var(--borde)'; } }}
         >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>

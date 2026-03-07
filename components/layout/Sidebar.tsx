@@ -3,6 +3,20 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Role } from '@/lib/types';
+import {
+  Home,
+  Calendar,
+  Edit3,
+  CheckCircle2,
+  BarChart2,
+  LayoutDashboard,
+  FileText,
+  Paperclip,
+  Cpu,
+  Settings,
+  Search,
+  HelpCircle
+} from 'lucide-react';
 
 // TODO: Replace with real user context
 const mockUserRoles: Role[] = ["EJ"];
@@ -10,7 +24,7 @@ const mockUserRoles: Role[] = ["EJ"];
 interface NavItem {
   label: string;
   href: string;
-  icon: string;
+  icon: any; // Using any for simplicity in the mapping
   requiredRoles?: Role[];
 }
 
@@ -18,28 +32,28 @@ const navItems: { section: string, items: NavItem[] }[] = [
   {
     section: "Operación",
     items: [
-      { label: "Inicio", href: "/", icon: "🏠" },
-      { label: "Períodos", href: "/periodos", icon: "📅" },
-      { label: "Carga", href: "/carga", icon: "✏️" },
-      { label: "Validaciones", href: "/validaciones", icon: "✅" },
+      { label: "Inicio", href: "/", icon: Home },
+      { label: "Períodos", href: "/periodos", icon: Calendar },
+      { label: "Carga", href: "/carga", icon: Edit3 },
+      { label: "Validaciones", href: "/validaciones", icon: CheckCircle2 },
     ]
   },
   {
     section: "Análisis",
     items: [
-      { label: "Indicadores", href: "/indicadores", icon: "📊" },
-      { label: "Tableros", href: "/tableros", icon: "📈" },
-      { label: "Reportes", href: "/reportes", icon: "📄" },
-      { label: "Evidencias", href: "/evidencias", icon: "📎" },
+      { label: "Indicadores", href: "/indicadores", icon: BarChart2 },
+      { label: "Tableros", href: "/tableros", icon: LayoutDashboard },
+      { label: "Reportes", href: "/reportes", icon: FileText },
+      { label: "Evidencias", href: "/evidencias", icon: Paperclip },
     ]
   },
   {
     section: "Gestión",
     items: [
-      { label: "Integraciones", href: "/integraciones", icon: "🔌", requiredRoles: ["EJ", "INTADM"] },
-      { label: "Administración", href: "/admin", icon: "⚙️", requiredRoles: ["EJ"] },
-      { label: "Auditoría", href: "/auditoria", icon: "🔍", requiredRoles: ["EJ", "AUD"] },
-      { label: "Ayuda", href: "/ayuda", icon: "❓" },
+      { label: "Integraciones", href: "/integraciones", icon: Cpu, requiredRoles: ["EJ", "INTADM"] },
+      { label: "Administración", href: "/admin", icon: Settings, requiredRoles: ["EJ"] },
+      { label: "Auditoría", href: "/auditoria", icon: Search, requiredRoles: ["EJ", "AUD"] },
+      { label: "Ayuda", href: "/ayuda", icon: HelpCircle },
     ]
   }
 ];
@@ -83,11 +97,14 @@ export function Sidebar() {
           return (
             <div key={idx}>
               <div className="sb-section">{group.section}</div>
-              {visibleItems.map(item => (
-                <Link key={item.href} href={item.href} className={`sb-item ${isActive(item.href)}`}>
-                  <span className="sb-icon">{item.icon}</span> {item.label}
-                </Link>
-              ))}
+              {visibleItems.map(item => {
+                const Icon = item.icon;
+                return (
+                  <Link key={item.href} href={item.href} className={`sb-item ${isActive(item.href)}`}>
+                    <span className="sb-icon"><Icon size={18} /></span> {item.label}
+                  </Link>
+                );
+              })}
             </div>
           );
         })}

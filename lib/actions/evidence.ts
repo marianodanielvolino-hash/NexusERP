@@ -32,7 +32,7 @@ export async function getUploadSignedUrl(entryId: string, fileName: string, cont
     // 3. Generar Signed Upload URL (válida por 60 seg)
     const { data: signedData, error: signedError } = await supabase
         .storage
-        .from('evidence_store')
+        .from('evidence_files')
         .createSignedUploadUrl(storagePath)
 
     if (signedError) throw new Error(`Error generando URL de subida: ${signedError.message}`)
