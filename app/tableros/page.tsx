@@ -1,29 +1,33 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { KpiCard } from "@/components/ui/KpiCard";
 import { KpiDetailDrawer } from "@/components/ui/KpiDetailDrawer";
 import { Status } from "@/lib/types";
 import { FilterBar } from "@/components/ui/FilterBar";
-
-// Realistic Demo Data (CIS Network)
-const GLOBAL_STATS = { ok: 142, alert: 28, critical: 10 };
-const TOP_CRITICALS = [
-    { kpiId: "BURNOUT_IDX", name: "Índice de desgaste del staff", areaName: "Gestión Innovación", value: 68, target: "< 58", status: "critical" as Status, delta: -10, trend: { points: [55, 59, 62, 65, 68], periodLabels: [] } },
-    { kpiId: "ABSENT_RATE", name: "Tasa de ausentismo", areaName: "Gestión Innovación", value: "15%", target: "< 10%", status: "critical" as Status, delta: -5, trend: { points: [8, 9, 11, 13, 15], periodLabels: [] } },
-];
-const AREA_STATS = [
-    { id: "1", name: "Inclusión Social", ok: 45, alert: 5, critical: 2, score: 92 },
-    { id: "2", name: "Desarrollo Humano", ok: 38, alert: 8, critical: 4, score: 85 },
-    { id: "5", name: "Gestión Innovación", ok: 22, alert: 10, critical: 3, score: 78 },
-    { id: "3", name: "Salud", ok: 37, alert: 5, critical: 1, score: 95 },
-];
+import { getDashboardSummary } from "@/lib/actions/dashboard";
 
 export default function TablerosPage() {
     const [activeTab, setActiveTab] = useState<"executive" | "area">("executive");
     const [selectedArea, setSelectedArea] = useState("");
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedKpiId, setSelectedKpiId] = useState<string | null>(null);
+
+    const [globalStats, setGlobalStats] = useState({ ok: 0, alert: 0, critical: 0 });
+    const [topCriticals, setTopCriticals] = useState<any[]>([]);
+    const [areaStats, setAreaStats] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        getDashboardSummary("2026-03").then(res => {
+            if (res) {
+                setGlobalStats(res.globalStats);
+                setTopCriticals(res.topCriticals);
+                setAreaStats(res.areaStats);
+            }
+            setLoading(false);
+        });
+    }, []);
 
     const openDrawer = (kpiId: string) => {
         setSelectedKpiId(kpiId);
@@ -85,58 +89,64 @@ export default function TablerosPage() {
                 <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
 
                     {/* SEMÁFORO GLOBAL OVERVIEW */}
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
-                        <div style={{ background: "white", padding: "1.5rem", borderRadius: "12px", border: "1px solid var(--borde)", textAlign: "center" }}>
-                            <h3 style={{ fontSize: "0.9rem", color: "var(--texto2)", margin: "0 0 0.5rem" }}>KPIs en Meta</h3>
-                            <div style={{ fontSize: "2.5rem", fontWeight: 700, color: "var(--verde)" }}>{GLOBAL_STATS.ok}</div>
-                        </div>
-                        <div style={{ background: "white", padding: "1.5rem", borderRadius: "12px", border: "1px solid var(--borde)", textAlign: "center" }}>
-                            <h3 style={{ fontSize: "0.9rem", color: "var(--texto2)", margin: "0 0 0.5rem" }}>Alertas Tempranas</h3>
-                            <div style={{ fontSize: "2.5rem", fontWeight: 700, color: "var(--amarillo)" }}>{GLOBAL_STATS.alert}</div>
-                        </div>
-                        <div style={{ background: "white", padding: "1.5rem", borderRadius: "12px", border: "1px solid var(--borde)", textAlign: "center" }}>
-                            <h3 style={{ fontSize: "0.9rem", color: "var(--texto2)", margin: "0 0 0.5rem" }}>Desvíos Críticos</h3>
-                            <div style={{ fontSize: "2.5rem", fontWeight: 700, color: "var(--rojo)" }}>{GLOBAL_STATS.critical}</div>
-                        </div>
-                    </div>
-
-                    {/* TOP CRITICALS */}
-                    <div>
-                        <h3 style={{ fontSize: "1.1rem", marginBottom: "1rem", color: "var(--texto)" }}>Desvíos Críticos (Top)</h3>
-                        <div style={{ display: "flex", gap: "1.5rem", overflowX: "auto", paddingBottom: "0.5rem" }}>
-                            {TOP_CRITICALS.map(kpi => (
-                                <KpiCard
-                                    key={kpi.kpiId}
-                                    kpi={{ id: kpi.kpiId, name: kpi.name, areaId: kpi.areaName }}
-                                    target={kpi.target}
-                                    value={kpi.value}
-                                    delta={kpi.delta}
-                                    status={kpi.status}
-                                    trend={kpi.trend}
-                                    onOpen={() => openDrawer(kpi.kpiId)}
-                                    width={300}
-                                />
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* RESUMEN DE AREAS */}
-                    <div>
-                        <h3 style={{ fontSize: "1.1rem", marginBottom: "1rem", color: "var(--texto)" }}>Resumen por Áreas</h3>
-                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1.5rem" }}>
-                            {AREA_STATS.map(area => (
-                                <div key={area.id} style={{ background: "white", padding: "1.5rem", borderRadius: "12px", border: "1px solid var(--borde)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <div>
-                                        <div style={{ fontSize: "1rem", fontWeight: 600 }}>{area.name}</div>
-                                        <div style={{ fontSize: "0.8rem", color: "var(--texto2)", marginTop: "0.25rem" }}>{area.ok} Bien • {area.alert} Alerta • {area.critical} Críticos</div>
-                                    </div>
-                                    <div style={{ fontSize: "1.5rem", fontWeight: 700, color: area.score >= 90 ? "var(--verde)" : "var(--amarillo)" }}>
-                                        {area.score}%
-                                    </div>
+                    {loading ? (
+                        <div style={{ textAlign: "center", padding: "2rem", color: "var(--texto2)" }}>Generando tableros...</div>
+                    ) : (
+                        <>
+                            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: "1.5rem" }}>
+                                <div style={{ background: "white", padding: "1.5rem", borderRadius: "12px", border: "1px solid var(--borde)", textAlign: "center" }}>
+                                    <h3 style={{ fontSize: "0.9rem", color: "var(--texto2)", margin: "0 0 0.5rem" }}>KPIs en Meta</h3>
+                                    <div style={{ fontSize: "2.5rem", fontWeight: 700, color: "var(--verde)" }}>{globalStats.ok}</div>
                                 </div>
-                            ))}
-                        </div>
-                    </div>
+                                <div style={{ background: "white", padding: "1.5rem", borderRadius: "12px", border: "1px solid var(--borde)", textAlign: "center" }}>
+                                    <h3 style={{ fontSize: "0.9rem", color: "var(--texto2)", margin: "0 0 0.5rem" }}>Alertas Tempranas</h3>
+                                    <div style={{ fontSize: "2.5rem", fontWeight: 700, color: "var(--amarillo)" }}>{globalStats.alert}</div>
+                                </div>
+                                <div style={{ background: "white", padding: "1.5rem", borderRadius: "12px", border: "1px solid var(--borde)", textAlign: "center" }}>
+                                    <h3 style={{ fontSize: "0.9rem", color: "var(--texto2)", margin: "0 0 0.5rem" }}>Desvíos Críticos</h3>
+                                    <div style={{ fontSize: "2.5rem", fontWeight: 700, color: "var(--rojo)" }}>{globalStats.critical}</div>
+                                </div>
+                            </div>
+
+                            {/* TOP CRITICALS */}
+                            <div>
+                                <h3 style={{ fontSize: "1.1rem", marginBottom: "1rem", color: "var(--texto)" }}>Desvíos Críticos (Top)</h3>
+                                <div style={{ display: "flex", gap: "1.5rem", overflowX: "auto", paddingBottom: "0.5rem" }}>
+                                    {topCriticals.length === 0 ? <p style={{ color: "var(--texto2)" }}>No hay críticos</p> : null}
+                                    {topCriticals.map((kpi, idx) => (
+                                        <KpiCard
+                                            key={kpi.kpiId}
+                                            kpi={{ id: kpi.kpiId, name: kpi.name, areaId: kpi.areaName }}
+                                            target={kpi.target}
+                                            value={kpi.value}
+                                            delta={kpi.delta}
+                                            status={kpi.status}
+                                            trend={kpi.trend}
+                                            onOpen={() => openDrawer(kpi.kpiId)}
+                                            width={300}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* RESUMEN DE AREAS */}
+                            <div>
+                                <h3 style={{ fontSize: "1.1rem", marginBottom: "1rem", color: "var(--texto)" }}>Resumen por Áreas</h3>
+                                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: "1.5rem" }}>
+                                    {areaStats.map((area, idx) => (
+                                        <div key={area.id || idx} style={{ background: "white", padding: "1.5rem", borderRadius: "12px", border: "1px solid var(--borde)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                            <div>
+                                                <div style={{ fontSize: "1rem", fontWeight: 600 }}>{area.name}</div>
+                                                <div style={{ fontSize: "0.8rem", color: "var(--texto2)", marginTop: "0.25rem" }}>{area.ok} Bien • {area.alert} Alerta • {area.critical} Críticos</div>
+                                            </div>
+                                            <div style={{ fontSize: "1.5rem", fontWeight: 700, color: area.score >= 90 ? "var(--verde)" : "var(--amarillo)" }}>
+                                                {area.score}%
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </>)}
                 </div>
             ) : (
                 /* AREA DRILLDOWN DASHBOARD */

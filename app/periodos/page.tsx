@@ -1,15 +1,19 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable";
-
-const MOCK_PERIODOS = [
-    { id: "P-2026-03", name: "Marzo 2026", status: "Abierto", progress: "45%" },
-    { id: "P-2026-02", name: "Febrero 2026", status: "Cerrado", progress: "100%" },
-    { id: "P-2026-01", name: "Enero 2026", status: "Cerrado", progress: "100%" },
-];
+import { getPeriodos } from "@/lib/actions/data";
 
 export default function PeriodosPage() {
+    const [periodos, setPeriodos] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        getPeriodos().then(data => {
+            setPeriodos(data);
+            setLoading(false);
+        });
+    }, []);
     const columns: ColumnDef<any>[] = [
         { header: "ID Período", accessorKey: "id" },
         { header: "Nombre", accessorKey: "name", cell: (row) => <span style={{ fontWeight: 600 }}>{row.name}</span> },
@@ -41,7 +45,11 @@ export default function PeriodosPage() {
                 </button>
             </div>
             <div className="widget-card fade-in" style={{ padding: "1rem" }}>
-                <DataTable rows={MOCK_PERIODOS} columns={columns} />
+                {loading ? (
+                    <div style={{ textAlign: "center", padding: "2rem", color: "var(--texto2)" }}>Cargando períodos...</div>
+                ) : (
+                    <DataTable rows={periodos} columns={columns} />
+                )}
             </div>
         </div>
     );

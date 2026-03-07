@@ -144,3 +144,38 @@ export async function revokeEvidence(fileId: string, comentario: string) {
     revalidatePath('/dashboard')
     return data
 }
+
+export async function getEvidences() {
+    try {
+        const supabase = await createClient()
+        const { data, error } = await supabase
+            .from('evidence_store')
+            .select(`
+                file_id,
+                url_storage,
+                estado,
+                uploaded_at,
+                kpi_data (
+                    period_id,
+                    kpi_definitions (nombre)
+                )
+            `)
+
+        if (error) {
+            console.error("Error fetching evidences:", error)
+            return []
+        }
+
+        return data.map((d: any) => ({
+            id: d.file_id || String(Math.random()),
+            filename: d.url_storage ? d.url_storage.split('/').pop() : "documento.pdf",
+            kpi: d.kpi_data?.kpi_definitions?.nombre || "Desconocido",
+            date: d.uploaded_at ? new Date(d.uploaded_at).toLocaleDateString() : "-",
+            uploadedBy: "Sistema",
+            size: "-"
+        }))
+    } catch (err) {
+        console.error("Exception evidences:", err)
+        return []
+    }
+}

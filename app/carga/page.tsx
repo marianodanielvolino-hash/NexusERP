@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable";
 import { FilterBar } from "@/components/ui/FilterBar";
 import { StatusPill } from "@/components/ui/StatusPill";
@@ -8,16 +8,18 @@ import { KpiDetailDrawer } from "@/components/ui/KpiDetailDrawer";
 import { BulkUploadModal } from "@/components/ui/BulkUploadModal";
 import { KpiData, Status } from "@/lib/types";
 
-// Mock Data - Simulacion Operadores CIS
-const MOCK_ROWS = [
-    { kpiId: "BURNOUT_IDX", name: "Índice de desgaste del staff", target: "< 58", value: "62", status: "alert" as Status, state: "draft", lastUpdatedAt: "hace 2h" },
-    { kpiId: "ABSENT_RATE", name: "Tasa de ausentismo", target: "< 10%", value: "", status: "ok" as Status, state: "pending_manager", lastUpdatedAt: "-" },
-    { kpiId: "INCIDENTS_CNT", name: "Incidentes y conflictos", target: "< 14", value: "22", status: "critical" as Status, state: "rejected", lastUpdatedAt: "Ayer" },
-    { kpiId: "SAFETY_CLIMATE", name: "Clima de convivencia", target: "> 75", value: "82", status: "ok" as Status, state: "draft", lastUpdatedAt: "hace 5m" },
-    { kpiId: "PARTICIP_RATE", name: "Participación en espacios", target: "> 65%", value: "60%", status: "alert" as Status, state: "draft", lastUpdatedAt: "hoy" },
-];
+import { getKpisForCarga } from "@/lib/actions/data";
 
 export default function CargaChecklistPage() {
+    const [kpis, setKpis] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        getKpisForCarga("2026-03").then(data => {
+            setKpis(data);
+            setLoading(false);
+        });
+    }, []);
     const [filters, setFilters] = useState<Record<string, string>>({ areaId: "", state: "" });
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [modalOpen, setModalOpen] = useState(false);
@@ -72,14 +74,18 @@ export default function CargaChecklistPage() {
                 onChange={setFilters}
             />
 
-            <DataTable
-                rows={MOCK_ROWS}
-                columns={columns}
-                onRowClick={(row) => {
-                    setSelectedKpiId(row.kpiId);
-                    setDrawerOpen(true);
-                }}
-            />
+            {loading ? (
+                <div style={{ textAlign: "center", padding: "2rem", color: "var(--texto2)" }}>Cargando indicadores...</div>
+            ) : (
+                <DataTable
+                    rows={kpis}
+                    columns={columns}
+                    onRowClick={(row) => {
+                        setSelectedKpiId(row.kpiId);
+                        setDrawerOpen(true);
+                    }}
+                />
+            )}
 
             {/* KPI Detail Drawer */}
             <KpiDetailDrawer

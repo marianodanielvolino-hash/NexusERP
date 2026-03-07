@@ -1,18 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FilterBar } from "@/components/ui/FilterBar";
 import { ReportArtifactRow } from "@/components/ui/ReportArtifactRow";
-
-// Mock Data
-const MOCK_REPORTS = [
-    { id: "rep-1", name: "Reporte Mensual EPRE", type: "Regulatorio", format: "PDF", generatedAt: "2026-03-01", author: "Sistema" },
-    { id: "rep-2", name: "Auditoría de SLAs", type: "Interno", format: "Excel", generatedAt: "2026-02-28", author: "Ejecutivo" },
-    { id: "rep-3", name: "Cierre de Período Q1", type: "Gerencial", format: "PDF", generatedAt: "2026-02-15", author: "Gerente" },
-];
+import { getReportsList } from "@/lib/actions/dashboard";
 
 export default function ReportesPage() {
+    const [reports, setReports] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const [filters, setFilters] = useState<Record<string, string>>({ type: "", dateRange: "" });
+
+    useEffect(() => {
+        getReportsList().then(data => {
+            setReports(data);
+            setLoading(false);
+        });
+    }, []);
 
     // Mock download handler
     const handleDownload = (id: string) => {
@@ -42,13 +45,17 @@ export default function ReportesPage() {
             />
 
             <div style={{ marginTop: "1.5rem" }}>
-                {MOCK_REPORTS.map(report => (
-                    <ReportArtifactRow
-                        key={report.id}
-                        report={report}
-                        onDownload={handleDownload}
-                    />
-                ))}
+                {loading ? (
+                    <div style={{ textAlign: "center", padding: "2rem", color: "var(--texto2)" }}>Cargando reportes...</div>
+                ) : (
+                    reports.map(report => (
+                        <ReportArtifactRow
+                            key={report.id}
+                            report={report}
+                            onDownload={handleDownload}
+                        />
+                    ))
+                )}
             </div>
         </div>
     );

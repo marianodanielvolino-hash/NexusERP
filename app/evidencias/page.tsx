@@ -1,18 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable";
 import { FilterBar } from "@/components/ui/FilterBar";
-
-// Mock Data
-const MOCK_EVIDENCES = [
-    { id: "ev-1", kpi: "Índice de Cobrabilidad", filename: "facturas_feb.pdf", uploadedBy: "Operador A", date: "2026-03-02", size: "2.4 MB" },
-    { id: "ev-2", kpi: "Nivel de Morosidad", filename: "reporte_mora.xlsx", uploadedBy: "Referente", date: "2026-03-01", size: "1.1 MB" },
-    { id: "ev-3", kpi: "Tiempo de Resolución", filename: "tickets_export.csv", uploadedBy: "Operador B", date: "2026-02-28", size: "5.8 MB" },
-];
+import { getEvidences } from "@/lib/actions/evidence";
 
 export default function EvidenciasPage() {
+    const [evidences, setEvidences] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const [filters, setFilters] = useState<Record<string, string>>({ kpi: "", uploader: "" });
+
+    useEffect(() => {
+        getEvidences().then(data => {
+            setEvidences(data);
+            setLoading(false);
+        });
+    }, []);
 
     const columns: ColumnDef<any>[] = [
         { header: "Archivo", cell: (row) => <div style={{ fontWeight: 600, color: "var(--azul-primary)" }}>📎 {row.filename}</div> },
@@ -47,10 +50,14 @@ export default function EvidenciasPage() {
                 onChange={setFilters}
             />
 
-            <DataTable
-                rows={MOCK_EVIDENCES}
-                columns={columns}
-            />
+            {loading ? (
+                <div style={{ textAlign: "center", padding: "2rem", color: "var(--texto2)" }}>Cargando evidencias...</div>
+            ) : (
+                <DataTable
+                    rows={evidences}
+                    columns={columns}
+                />
+            )}
         </div>
     );
 }

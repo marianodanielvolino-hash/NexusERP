@@ -1,17 +1,21 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { Status } from "@/lib/types";
-
-const MOCK_INDICADORES = [
-    { id: "kpi-1", name: "Satisfacción del Cliente", area: "Comercial", frequency: "Mensual", target: "90%", value: "85%", status: "alert" as Status },
-    { id: "kpi-2", name: "Reducción de Costos", area: "Finanzas", frequency: "Módulos", target: "10%", value: "12%", status: "ok" as Status },
-    { id: "kpi-3", name: "Uptime de Servidores", area: "IT", frequency: "Diaria", target: "99.9%", value: "98.5%", status: "critical" as Status },
-];
+import { getKpiDefinitions } from "@/lib/actions/data";
 
 export default function IndicadoresPage() {
+    const [kpis, setKpis] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        getKpiDefinitions().then(data => {
+            setKpis(data);
+            setLoading(false);
+        });
+    }, []);
     const columns: ColumnDef<any>[] = [
         { header: "Estructura KPI", cell: (row) => <div><div style={{ fontWeight: 600 }}>{row.name}</div><div style={{ fontSize: "0.75rem", color: "var(--texto2)" }}>ID: {row.id}</div></div> },
         { header: "Área Ejecutiva", accessorKey: "area" },
@@ -34,7 +38,11 @@ export default function IndicadoresPage() {
                 </button>
             </div>
             <div className="widget-card fade-in" style={{ padding: "1rem" }}>
-                <DataTable rows={MOCK_INDICADORES} columns={columns} />
+                {loading ? (
+                    <div style={{ textAlign: "center", padding: "2rem", color: "var(--texto2)" }}>Cargando directorio...</div>
+                ) : (
+                    <DataTable rows={kpis} columns={columns} />
+                )}
             </div>
         </div>
     );

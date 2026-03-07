@@ -1,22 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DataTable, ColumnDef } from "@/components/ui/DataTable";
 import { FilterBar } from "@/components/ui/FilterBar";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { KpiDetailDrawer } from "@/components/ui/KpiDetailDrawer";
 import { Status } from "@/lib/types";
-
-// Fake mock items simulating pending tasks for managers and executives
-const MOCK_INBOX_ROWS = [
-    { taskId: "t1", kpiId: "BURNOUT_IDX", kpiName: "Índice de desgaste del staff", areaName: "CIS-01", value: "68", target: "< 58", status: "critical" as Status, dateSubmitted: "Hoy 10:30am", submittedBy: "Facilitador Bienestar" },
-    { taskId: "t2", kpiId: "ACTIVITY_CONT", kpiName: "Continuidad de actividades", areaName: "CIS-05", value: "70%", target: "> 85%", status: "alert" as Status, dateSubmitted: "Ayer", submittedBy: "Coordinador CIS" },
-];
+import { getKpisForValidacion } from "@/lib/actions/data";
 
 export default function ValidacionesPage() {
+    const [tasks, setTasks] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
     const [filters, setFilters] = useState<Record<string, string>>({ areaId: "", status: "" });
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState<any>(null);
+
+    useEffect(() => {
+        getKpisForValidacion("2026-03").then(data => {
+            setTasks(data);
+            setLoading(false);
+        });
+    }, []);
 
     const columns: ColumnDef<any>[] = [
         {
@@ -83,14 +87,18 @@ export default function ValidacionesPage() {
                 onChange={setFilters}
             />
 
-            <DataTable
-                rows={MOCK_INBOX_ROWS}
-                columns={columns}
-                onRowClick={(row) => {
-                    setSelectedTask(row);
-                    setDrawerOpen(true);
-                }}
-            />
+            {loading ? (
+                <div style={{ textAlign: "center", padding: "2rem", color: "var(--texto2)" }}>Cargando validaciones pendientes...</div>
+            ) : (
+                <DataTable
+                    rows={tasks}
+                    columns={columns}
+                    onRowClick={(row) => {
+                        setSelectedTask(row);
+                        setDrawerOpen(true);
+                    }}
+                />
+            )}
 
             {selectedTask && (
                 <KpiDetailDrawer
