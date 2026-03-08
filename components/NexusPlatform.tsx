@@ -5,9 +5,9 @@ import { createClient } from "@/lib/supabase/client";
 import { signOut } from "@/lib/actions/auth";
 import { EmptyState } from "./ui/EmptyState";
 import { SlideDrawer } from "./ui/SlideDrawer";
-import { Skeleton, CardSkeleton } from "./ui/Skeleton";
 import { Tooltip } from "./ui/Tooltip";
 import { getNexusClients, getNexusProjects, getNexusKPIs, getHubStats, createNexusClient, createNexusProject } from "@/lib/actions/nexus";
+import { METODO_MOCK_DATA, calcularEstadoProyecto, estaVencido, getColorSemaforo, getBadgeColor, CURRENT_DATE_MOCK } from "@/lib/mocks/gestionMock";
 
 // ─── DEMO DATA (Mantained ONLY as Fallback during Phase 4 transition) ───────
 const DEMO_DATA = {
@@ -729,11 +729,14 @@ Responde de forma concisa y útil en español. Si hay alertas o indicadores crí
 
     // ── HUB VIEW ──────────────────────────────────────────────────────────────
     const HubView = () => {
+        const compromisosVencidos = METODO_MOCK_DATA.compromisos.filter(c => estaVencido(c.fechaVencimiento) && c.estado === 'pendiente');
+        const otrosCompromisos = METODO_MOCK_DATA.compromisos.filter(c => (!estaVencido(c.fechaVencimiento)) && c.estado === 'pendiente');
+
         return (
             <div>
                 <div style={{ marginBottom: "24px" }}>
-                    <h1 style={styles.h1}>Hub Global · Nexus SCG</h1>
-                    <p style={styles.sub}>Plataforma de Control de Gestión · Multi-Cliente · Multi-Proyecto · v2.0</p>
+                    <h1 style={styles.h1}>Hub Global · Nexus SCG (El Método)</h1>
+                    <p style={styles.sub}>Motor de control de impacto. {CURRENT_DATE_MOCK}</p>
                 </div>
 
                 {/* Stats */}
@@ -755,6 +758,48 @@ Responde de forma concisa y útil en español. Si hay alertas o indicadores crí
                         </div>
                     ))}
                 </div>
+
+                {/* SPRINT 1: "EL MÉTODO" - COMPROMISOS CRÍTICOS (Arriba de todo forzando atención) */}
+                {(compromisosVencidos.length > 0 || otrosCompromisos.length > 0) && (
+                    <div style={{ marginBottom: "32px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+                            <div>
+                                <h2 style={styles.h2}>Compromisos Activos</h2>
+                                <p style={styles.sub}>Derivados de mesas de gestión y reuniones de avance</p>
+                            </div>
+                        </div>
+                        <div style={styles.grid2}>
+                            {/* Primero los vencidos (Rojo) */}
+                            {compromisosVencidos.map(c => (
+                                <div key={c.id} style={{ ...styles.card, borderLeft: `3px solid ${getColorSemaforo('rojo')}`, padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <div>
+                                        <div style={{ fontSize: "11px", color: getColorSemaforo('rojo'), fontWeight: 600, marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: getColorSemaforo('rojo'), display: "inline-block" }}></span>
+                                            Vencido: {c.fechaVencimiento}
+                                        </div>
+                                        <div style={{ fontSize: "14px", fontWeight: "600", color: "#f8fafc", marginBottom: "4px" }}>{c.descripcion}</div>
+                                        <div style={{ fontSize: "11px", color: "#64748b" }}>Resp: {c.asignadoA} · {c.origen}</div>
+                                    </div>
+                                    <button style={styles.btn("ghost")}>Ver</button>
+                                </div>
+                            ))}
+                            {/* Luego los en regla */}
+                            {otrosCompromisos.map(c => (
+                                <div key={c.id} style={{ ...styles.card, borderLeft: `3px solid ${getColorSemaforo('verde')}`, padding: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <div>
+                                        <div style={{ fontSize: "11px", color: getColorSemaforo('verde'), fontWeight: 600, marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px" }}>
+                                            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: getColorSemaforo('verde'), display: "inline-block" }}></span>
+                                            Vence: {c.fechaVencimiento}
+                                        </div>
+                                        <div style={{ fontSize: "14px", fontWeight: "600", color: "#f8fafc", marginBottom: "4px" }}>{c.descripcion}</div>
+                                        <div style={{ fontSize: "11px", color: "#64748b" }}>Resp: {c.asignadoA} · {c.origen}</div>
+                                    </div>
+                                    <button style={styles.btn("ghost")}>Ver</button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Clients Grid */}
                 <div style={{ marginBottom: "16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -923,6 +968,8 @@ Responde de forma concisa y útil en español. Si hay alertas o indicadores crí
         const scores = areas.map(([, d]: any) => d.score);
         const globalScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
 
+        const proyectosSimulados = METODO_MOCK_DATA.proyectos;
+
         const statusCounts = {
             ok: areas.reduce((a, [, d]: any) => a + d.indicators.filter((i: any) => i.status === "ok").length, 0),
             alert: areas.reduce((a, [, d]: any) => a + d.indicators.filter((i: any) => i.status === "alert").length, 0),
@@ -957,6 +1004,53 @@ Responde de forma concisa y útil en español. Si hay alertas o indicadores crí
                             <div style={{ fontSize: "12px", color: "#64748b" }}>{s.label}</div>
                         </div>
                     ))}
+                </div>
+
+                {/* SPRINT 1: PROYECTOS "EL MÉTODO" (Progreso Dual) */}
+                <div style={{ marginBottom: "24px" }}>
+                    <h2 style={{ ...styles.h2, marginBottom: "16px" }}>Proyecciones de Impacto</h2>
+                    <div style={styles.grid2}>
+                        {proyectosSimulados.map(p => {
+                            const colorEstado = getColorSemaforo(calcularEstadoProyecto(p.avanceReal, p.avancePlanificado));
+                            const desvio = p.avancePlanificado - p.avanceReal;
+                            return (
+                                <div key={p.id} style={{ ...styles.card, padding: "16px", borderLeft: `3px solid ${colorEstado}` }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "12px" }}>
+                                        <div>
+                                            <h3 style={{ margin: 0, fontSize: "16px", color: "#f8fafc", fontWeight: 600 }}>{p.nombre}</h3>
+                                            <p style={{ margin: "4px 0 0 0", fontSize: "11px", color: "#64748b" }}>Líder: {p.responsable} · {p.fechaInicio} / {p.fechaFin}</p>
+                                        </div>
+                                        <div style={{ ...styles.tag(colorEstado), fontSize: "11px", display: "flex", alignItems: "center", gap: "4px" }}>
+                                            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: colorEstado }}></div>
+                                            {desvio > 0 ? `Desvío -${desvio}%` : `En Regla`}
+                                        </div>
+                                    </div>
+
+                                    {/* Barra Planificado (Fondo tenue) */}
+                                    <div style={{ marginBottom: "10px" }}>
+                                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#94a3b8", marginBottom: "4px" }}>
+                                            <span>Avance Planificado</span>
+                                            <span>{p.avancePlanificado}%</span>
+                                        </div>
+                                        <div style={{ width: "100%", height: "4px", background: "rgba(255,255,255,0.05)", borderRadius: "2px", overflow: "hidden" }}>
+                                            <div style={{ width: `${p.avancePlanificado}%`, height: "100%", background: "#475569" }}></div>
+                                        </div>
+                                    </div>
+
+                                    {/* Barra Real (Color vivo) */}
+                                    <div>
+                                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#f8fafc", marginBottom: "4px", fontWeight: 600 }}>
+                                            <span>Avance Real</span>
+                                            <span>{p.avanceReal}%</span>
+                                        </div>
+                                        <div style={{ width: "100%", height: "6px", background: "rgba(255,255,255,0.05)", borderRadius: "3px", overflow: "hidden" }}>
+                                            <div style={{ width: `${p.avanceReal}%`, height: "100%", background: colorEstado, borderRadius: "3px" }}></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
                 </div>
 
                 {/* Timeline Chart */}
