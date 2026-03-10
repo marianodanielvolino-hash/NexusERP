@@ -1,0 +1,55 @@
+
+> nexus-scg@0.1.0 build
+> next build
+
+⚠ `eslint` configuration in next.config.ts is no longer supported. See more info here: https://nextjs.org/docs/app/api-reference/cli/next#next-lint-options
+⚠ Invalid next.config.ts options detected: 
+⚠     Unrecognized key(s) in object: 'eslint'
+⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 10.7s
+  Skipping validation of types
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/26) ...
+  Generating static pages using 7 workers (6/26) 
+  Generating static pages using 7 workers (12/26) 
+  Generating static pages using 7 workers (19/26) 
+✓ Generating static pages using 7 workers (26/26) in 1181.3ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /admin
+├ ○ /admin/areas
+├ ○ /admin/indicadores
+├ ○ /admin/tenants
+├ ƒ /api/assistant
+├ ƒ /api/auth/callback
+├ ƒ /api/integration/webhook
+├ ○ /auditoria
+├ ƒ /auth/callback
+├ ○ /ayuda
+├ ○ /carga
+├ ○ /evidencias
+├ ○ /forgot-password
+├ ○ /indicadores
+├ ○ /integraciones
+├ ○ /login
+├ ○ /periodos
+├ ○ /register
+├ ○ /reportes
+├ ○ /reset-password
+├ ○ /tableros
+└ ○ /validaciones
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

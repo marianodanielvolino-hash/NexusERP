@@ -8,6 +8,7 @@ import { SlideDrawer } from "./ui/SlideDrawer";
 import { Tooltip } from "./ui/Tooltip";
 import { getNexusClients, getNexusProjects, getNexusKPIs, getHubStats, createNexusClient, createNexusProject } from "@/lib/actions/nexus";
 import { METODO_MOCK_DATA, calcularEstadoProyecto, estaVencido, getColorSemaforo, getBadgeColor, CURRENT_DATE_MOCK } from "@/lib/mocks/gestionMock";
+import { CardSkeleton } from "./ui/Skeleton";
 
 // ─── DEMO DATA (Mantained ONLY as Fallback during Phase 4 transition) ───────
 const DEMO_DATA = {
@@ -947,7 +948,7 @@ Responde de forma concisa y útil en español. Si hay alertas o indicadores crí
                                         </div>
                                     </div>
                                     <div style={{ textAlign: "right", minWidth: "90px" }}>
-                                        {kd && <MiniBar timeline={kd.timeline} color={client.color} />}
+                                        {kd && <MiniBar timeline={kd.timeline} color={activeClient.color} />}
                                         <div style={{ fontSize: "11px", color: "#475569", marginTop: "4px" }}>Últ. actualización</div>
                                         <div style={{ fontSize: "12px", color: "#94a3b8" }}>{p.lastUpdate}</div>
                                     </div>
